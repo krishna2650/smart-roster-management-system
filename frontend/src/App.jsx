@@ -56,32 +56,75 @@ const AppLayout = ({ children }) => {
   );
 };
 
+// Enterprise Error Boundary preventing any blank screen crashes
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught display error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="d-flex flex-column justify-content-center align-items-center min-vh-100 bg-light p-4 text-center">
+          <div className="card shadow-sm border-0 p-4" style={{ maxWidth: '480px', borderRadius: '14px' }}>
+            <h4 style={{ fontWeight: 800, color: '#0f172a' }}>DataStraw Smart Roster System</h4>
+            <p className="text-muted" style={{ fontSize: '0.88rem' }}>
+              A display render event was caught. You can restore the session below.
+            </p>
+            <div className="alert alert-warning text-start" style={{ fontSize: '0.78rem' }}>
+              {this.state.error?.message || 'Interface component recovery'}
+            </div>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                this.setState({ hasError: false });
+                window.location.href = '/';
+              }}
+            >
+              Reload Dashboard
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
-          <Route path="/showreel" element={<AppLayout><Showreel /></AppLayout>} />
-          <Route path="/roster" element={<AppLayout><RosterManagement /></AppLayout>} />
-          <Route path="/conflicts" element={<AppLayout><ConflictCenter /></AppLayout>} />
-          <Route path="/change-workflow" element={<AppLayout><ChangeManagement /></AppLayout>} />
-          <Route path="/employees" element={<AppLayout><Employees /></AppLayout>} />
-          <Route path="/brands" element={<AppLayout><Brands /></AppLayout>} />
-          <Route path="/processes" element={<AppLayout><Processes /></AppLayout>} />
-          <Route path="/pods" element={<AppLayout><Pods /></AppLayout>} />
-          <Route path="/assignments" element={<AppLayout><Assignments /></AppLayout>} />
-          <Route path="/availability" element={<AppLayout><Availability /></AppLayout>} />
-          <Route path="/holidays" element={<AppLayout><Holidays /></AppLayout>} />
-          <Route path="/reports" element={<AppLayout><Reports /></AppLayout>} />
-          <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="/showreel" element={<AppLayout><Showreel /></AppLayout>} />
+            <Route path="/roster" element={<AppLayout><RosterManagement /></AppLayout>} />
+            <Route path="/conflicts" element={<AppLayout><ConflictCenter /></AppLayout>} />
+            <Route path="/change-workflow" element={<AppLayout><ChangeManagement /></AppLayout>} />
+            <Route path="/employees" element={<AppLayout><Employees /></AppLayout>} />
+            <Route path="/brands" element={<AppLayout><Brands /></AppLayout>} />
+            <Route path="/processes" element={<AppLayout><Processes /></AppLayout>} />
+            <Route path="/pods" element={<AppLayout><Pods /></AppLayout>} />
+            <Route path="/assignments" element={<AppLayout><Assignments /></AppLayout>} />
+            <Route path="/availability" element={<AppLayout><Availability /></AppLayout>} />
+            <Route path="/holidays" element={<AppLayout><Holidays /></AppLayout>} />
+            <Route path="/reports" element={<AppLayout><Reports /></AppLayout>} />
+            <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

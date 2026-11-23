@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import {
   Users, Building2, GitBranch, Layers, AlertTriangle, CheckCircle,
-  CalendarDays, TrendingUp, ArrowRight, Play, RefreshCw
+  CalendarDays, TrendingUp, ArrowRight, Play, RefreshCw, Sparkles
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
