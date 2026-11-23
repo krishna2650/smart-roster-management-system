@@ -41,15 +41,23 @@ const Navbar = ({ onToggleMobileSidebar }) => {
   useEffect(() => {
     const fetchConflictCount = async () => {
       try {
-        const res = await api.get('/conflicts');
-        setCriticalConflicts(res.data.critical_count || 0);
+        const res = await api.get('/conflicts?status=UNRESOLVED');
+        const count = res.data.global_critical_unresolved ?? res.data.critical_count ?? 0;
+        setCriticalConflicts(count);
       } catch (e) {
         // quiet
       }
     };
     fetchConflictCount();
-    const interval = setInterval(fetchConflictCount, 15000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchConflictCount, 10000);
+    
+    // Listen for custom conflicts-updated events from resolution actions
+    const handleUpdate = () => fetchConflictCount();
+    window.addEventListener('conflicts-updated', handleUpdate);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('conflicts-updated', handleUpdate);
+    };
   }, []);
 
   const todayFormatted = new Intl.DateTimeFormat('en-IN', {

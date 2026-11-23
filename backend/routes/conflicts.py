@@ -38,14 +38,28 @@ def get_conflicts():
 
     # Summary counts
     total = len(conflicts)
-    critical_count = len([c for c in conflicts if c.get("severity") == "CRITICAL"])
-    unresolved_count = len([c for c in conflicts if c.get("resolution_status") == "UNRESOLVED"])
+    if status == "RESOLVED":
+        critical_count = len([c for c in conflicts if c.get("severity") == "CRITICAL"])
+    else:
+        critical_count = len([c for c in conflicts if c.get("severity") == "CRITICAL" and c.get("resolution_status", "UNRESOLVED") == "UNRESOLVED"])
+
+    unresolved_count = len([c for c in conflicts if c.get("resolution_status", "UNRESOLVED") == "UNRESOLVED"])
+
+    # Global stats across collection for header telemetry & badges
+    global_total = db[CONFLICTS_COL].count_documents({})
+    global_unresolved = db[CONFLICTS_COL].count_documents({"resolution_status": "UNRESOLVED"})
+    global_critical_unresolved = db[CONFLICTS_COL].count_documents({"severity": "CRITICAL", "resolution_status": "UNRESOLVED"})
+    global_resolved = db[CONFLICTS_COL].count_documents({"resolution_status": "RESOLVED"})
 
     return jsonify({
         "conflicts": serialize_doc(conflicts),
         "total": total,
         "critical_count": critical_count,
-        "unresolved_count": unresolved_count
+        "unresolved_count": unresolved_count,
+        "global_total": global_total,
+        "global_unresolved": global_unresolved,
+        "global_critical_unresolved": global_critical_unresolved,
+        "global_resolved": global_resolved
     })
 
 @conflicts_bp.route("/<c_id>/backups", methods=["GET"])

@@ -10,6 +10,7 @@ const ConflictCenter = () => {
   const [loading, setLoading] = useState(true);
   const [severityFilter, setSeverityFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('UNRESOLVED');
+  const [counts, setCounts] = useState({ total: 0, critical: 0, unresolved: 0, resolved: 0 });
   
   // Backup modal state
   const [selectedConflict, setSelectedConflict] = useState(null);
@@ -22,6 +23,12 @@ const ConflictCenter = () => {
       setLoading(true);
       const res = await api.get(`/conflicts?severity=${severityFilter}&status=${statusFilter}`);
       setConflicts(res.data.conflicts || []);
+      setCounts({
+        total: res.data.global_total ?? res.data.total ?? 0,
+        critical: res.data.global_critical_unresolved ?? res.data.critical_count ?? 0,
+        unresolved: res.data.global_unresolved ?? res.data.unresolved_count ?? 0,
+        resolved: res.data.global_resolved ?? 0
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -59,6 +66,7 @@ const ConflictCenter = () => {
       setSuccessMsg(`Successfully assigned ${candidate.employee_name} as relief backup for ${selectedConflict.brand_name}! Roster revalidated.`);
       setSelectedConflict(null);
       fetchConflicts();
+      window.dispatchEvent(new Event('conflicts-updated'));
       setTimeout(() => setSuccessMsg(''), 5000);
     } catch (err) {
       alert("Error assigning backup: " + (err.response?.data?.error || err.message));
@@ -72,6 +80,7 @@ const ConflictCenter = () => {
       await api.put(`/conflicts/${c._id}/resolve`, { notes });
       setSuccessMsg("Conflict marked as resolved and roster revalidated.");
       fetchConflicts();
+      window.dispatchEvent(new Event('conflicts-updated'));
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
       alert(err.response?.data?.error || err.message);
@@ -103,6 +112,66 @@ const ConflictCenter = () => {
         </div>
       )}
 
+      {/* Telemetry Summary Cards */}
+      <div className="row g-2 mb-3">
+        <div className="col-sm-4 col-12">
+          <div
+            className={`p-2 px-3 rounded border d-flex align-items-center justify-content-between ${
+              statusFilter === 'UNRESOLVED' ? 'bg-danger text-white border-danger shadow-sm' : 'bg-white text-dark shadow-xs'
+            }`}
+            style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
+            onClick={() => setStatusFilter('UNRESOLVED')}
+            title="View Active / Unresolved live coverage gaps"
+          >
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Active Live Gaps</div>
+              <div style={{ fontSize: '0.68rem', opacity: 0.85 }}>Requiring Relief Backup</div>
+            </div>
+            <span className={`badge ${statusFilter === 'UNRESOLVED' ? 'bg-white text-danger' : 'bg-danger text-white'}`} style={{ fontSize: '0.9rem' }}>
+              {counts.unresolved}
+            </span>
+          </div>
+        </div>
+
+        <div className="col-sm-4 col-12">
+          <div
+            className={`p-2 px-3 rounded border d-flex align-items-center justify-content-between ${
+              statusFilter === 'RESOLVED' ? 'bg-success text-white border-success shadow-sm' : 'bg-white text-dark shadow-xs'
+            }`}
+            style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
+            onClick={() => setStatusFilter('RESOLVED')}
+            title="View Resolved conflicts & audit logs"
+          >
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Resolved & Covered</div>
+              <div style={{ fontSize: '0.68rem', opacity: 0.85 }}>Relief Assigned / Signed off</div>
+            </div>
+            <span className={`badge ${statusFilter === 'RESOLVED' ? 'bg-white text-success' : 'bg-success text-white'}`} style={{ fontSize: '0.9rem' }}>
+              {counts.resolved}
+            </span>
+          </div>
+        </div>
+
+        <div className="col-sm-4 col-12">
+          <div
+            className={`p-2 px-3 rounded border d-flex align-items-center justify-content-between ${
+              statusFilter === '' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-dark shadow-xs'
+            }`}
+            style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
+            onClick={() => setStatusFilter('')}
+            title="View All conflicts"
+          >
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>All Conflicts</div>
+              <div style={{ fontSize: '0.68rem', opacity: 0.85 }}>Active + Resolved Records</div>
+            </div>
+            <span className={`badge ${statusFilter === '' ? 'bg-white text-primary' : 'bg-primary text-white'}`} style={{ fontSize: '0.9rem' }}>
+              {counts.total}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Filter Tabs */}
       <div className="card border-0 shadow-sm mb-4">
         <div className="card-body p-3">
@@ -114,9 +183,9 @@ const ConflictCenter = () => {
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
               >
-                <option value="UNRESOLVED">Active / Unresolved Conflicts</option>
-                <option value="RESOLVED">Resolved Conflicts</option>
-                <option value="">All Conflicts</option>
+                <option value="UNRESOLVED">Active / Unresolved Conflicts ({counts.unresolved} live)</option>
+                <option value="RESOLVED">Resolved Conflicts ({counts.resolved} archived)</option>
+                <option value="">All Conflicts ({counts.total} total)</option>
               </select>
             </div>
             <div className="col-md-4">
@@ -133,6 +202,21 @@ const ConflictCenter = () => {
                 <option value="LOW">Low</option>
               </select>
             </div>
+          </div>
+          <div className="text-muted mt-2 pt-2 border-top d-flex flex-wrap justify-content-between align-items-center" style={{ fontSize: '0.76rem' }}>
+            <div>
+              Showing <strong>{conflicts.length}</strong> {statusFilter === 'UNRESOLVED' ? 'live unassigned gap(s)' : statusFilter === 'RESOLVED' ? 'resolved gap(s)' : 'conflict record(s)'}.
+            </div>
+            {statusFilter === 'UNRESOLVED' && counts.resolved > 0 && (
+              <span className="text-primary fw-semibold" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('RESOLVED')}>
+                {counts.resolved} previously resolved conflicts archived in audit log →
+              </span>
+            )}
+            {statusFilter === 'RESOLVED' && counts.unresolved > 0 && (
+              <span className="text-danger fw-semibold" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('UNRESOLVED')}>
+                ← Return to {counts.unresolved} live unresolved gap(s)
+              </span>
+            )}
           </div>
         </div>
       </div>
