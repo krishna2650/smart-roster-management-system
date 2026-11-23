@@ -15,7 +15,6 @@ import {
   Settings,
   Workflow,
   Sparkles,
-  Compass,
   X
 } from 'lucide-react';
 
@@ -23,7 +22,6 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   const navItems = [
     { section: "CORE OPERATIONS" },
     { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/3d", icon: Compass, label: "Realistic 3D World", badge: "WebGL" },
     { to: "/showreel", icon: Sparkles, label: "3D Orbit Showreel", badge: "Demo" },
     { to: "/roster", icon: CalendarRange, label: "Roster Management", badge: "Engine" },
     { to: "/conflicts", icon: AlertTriangle, label: "Conflict Center" },

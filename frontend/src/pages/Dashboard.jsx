@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import {
   Users, Building2, GitBranch, Layers, AlertTriangle, CheckCircle,
-  CalendarDays, TrendingUp, ArrowRight, Play, RefreshCw, Sparkles, Compass
+  CalendarDays, TrendingUp, ArrowRight, Play, RefreshCw, Sparkles
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -171,15 +171,6 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="d-flex gap-2 mt-2 mt-md-0">
-          <Link
-            to="/3d"
-            className="btn btn-primary d-flex align-items-center gap-1.5"
-            style={{ fontSize: '0.85rem', fontWeight: 700, backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#38bdf8' }}
-            title="Open Interactive 360° WebGL 3D World"
-          >
-            <Compass size={14} color="#38bdf8" />
-            Realistic 3D World
-          </Link>
           <Link
             to="/showreel"
             className="btn btn-outline-primary d-flex align-items-center gap-1.5"
