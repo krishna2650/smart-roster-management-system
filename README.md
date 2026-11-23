@@ -165,7 +165,7 @@ flowchart TD
 ## 6. Answers to Assessment Questions ("Tell Us How You Think")
 
 ### Question 1: How did you model employees, brands, processes, pods, and their relationships?
-We avoided monolithic data structures and implemented a normalized, decoupled architecture using MongoDB ObjectId references:
+ I avoided monolithic data structures and implemented a normalized, decoupled architecture using MongoDB ObjectId references:
 - **Employees** belong to an **Operational Pod** overseen by a **Pod Lead**.
 - **Brands** represent D2C client accounts with independent operating calendars and pod ownership.
 - **Processes** represent operational streams (CS, ACC, NDR, Retention) nested under Brands, with the option to inherit or override the brand calendar and set independent staffing thresholds.
