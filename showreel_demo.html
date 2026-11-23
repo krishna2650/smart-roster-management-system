@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataStraw Smart Roster — Classic 3D Orbit Showreel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #07090e;
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      perspective: 1400px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Cinematic Ambient Glow */
+    .ambient-orb-1 {
+      position: fixed;
+      top: 5%;
+      left: 20%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.16) 0%, rgba(37, 99, 235, 0) 70%);
+      filter: blur(80px);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient-orb-2 {
+      position: fixed;
+      bottom: 5%;
+      right: 20%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 70%);
+      filter: blur(80px);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Container Header */
+    .header-bar {
+      text-align: center;
+      margin-bottom: 2rem;
+      z-index: 10;
+      position: relative;
+    }
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #93c5fd;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .pill-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 8px #3b82f6;
+    }
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      margin-bottom: 0.4rem;
+    }
+    p.subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 1rem;
+      justify-content: center;
+    }
+    .btn-control {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-control:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .speed-group {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .speed-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .speed-btn.active {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    /* Orbit Arena */
+    .orbit-stage {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      height: 540px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1400px;
+      perspective-origin: 50% 45%;
+      margin: 1rem 0 2rem;
+      z-index: 5;
+    }
+    .orbit-ring {
+      position: absolute;
+      width: 860px;
+      height: 260px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 255, 255, 0.07);
+      transform: rotateX(68deg) translateY(120px);
+      pointer-events: none;
+    }
+    .orbit-ring-inner {
+      position: absolute;
+      width: 680px;
+      height: 200px;
+      border-radius: 50%;
+      border: 1px solid rgba(59, 130, 246, 0.12);
+      transform: rotateX(68deg) translateY(120px);
+      pointer-events: none;
+    }
+
+    /* Orbit Cards */
+    .orbit-card {
+      position: absolute;
+      width: 440px;
+      max-width: 90vw;
+      height: 420px;
+      border-radius: 20px;
+      padding: 1.75rem;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 41, 59, 0.9) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      user-select: none;
+      transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.85s ease, filter 0.85s ease, box-shadow 0.4s ease;
+      cursor: pointer;
+    }
+    .orbit-card.front {
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 25px 60px -10px rgba(37, 99, 235, 0.35), 0 0 30px rgba(0, 0, 0, 0.8);
+      cursor: default;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .card-category {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+    .badge-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+    .card-headline {
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    .card-desc {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    /* 4-Stat Box */
+    .stat-matrix {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+    .stat-lbl {
+      font-size: 0.62rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* Features List */
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      margin-bottom: 4px;
+    }
+    .feature-icon {
+      color: #3b82f6;
+      font-weight: 800;
+    }
+
+    /* Card Footer */
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .card-counter {
+      font-size: 0.72rem;
+      color: #64748b;
+    }
+    .card-cta {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: #ffffff;
+      background: #2563eb;
+      padding: 5px 14px;
+      border-radius: 8px;
+      transition: background 0.2s ease;
+    }
+    .card-cta:hover {
+      background: #1d4ed8;
+    }
+
+    /* Dots Navigation */
+    .dots-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 0.5rem;
+      z-index: 10;
+    }
+    .dot-btn {
+      width: 10px;
+      height: 8px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dot-btn.active {
+      width: 32px;
+      background: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+    }
+
+    /* Footer Credits */
+    .footer-bar {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #64748b;
+      display: flex;
+      gap: 16px;
+      z-index: 10;
+    }
+    .footer-bar a {
+      color: #94a3b8;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .footer-bar a:hover {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-orb-1"></div>
+  <div class="ambient-orb-2"></div>
+
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="pill-badge">
+      <span class="dot"></span>
+      Classic 3D Orbit Showreel
+    </div>
+    <h1>DataStraw Smart Roster System</h1>
+    <p class="subtitle">
+      Autonomous 31-day scheduling engine with real-time single-resource breach alerts, peer-to-peer shift swaps, and 24/7 cloud telemetry.
+    </p>
+
+    <!-- Controls -->
+    <div class="controls-bar">
+      <div class="speed-group">
+        <button class="speed-btn active" id="btn-speed-classic" onclick="setSpeed('classic')">Classic Pace</button>
+        <button class="speed-btn" id="btn-speed-fast" onclick="setSpeed('fast')">Fast</button>
+        <button class="speed-btn" id="btn-speed-slow" onclick="setSpeed('slow')">Ambient</button>
+      </div>
+
+      <button class="btn-control" id="btn-play-pause" onclick="togglePlay()">
+        <span id="play-pause-icon">⏸</span>
+        <span id="play-pause-text">Pause</span>
+      </button>
+
+      <button class="btn-control" onclick="prevCard()" title="Previous Feature">◀ Prev</button>
+      <button class="btn-control" onclick="nextCard()" title="Next Feature">Next ▶</button>
+    </div>
+  </div>
+
+  <!-- 3D Orbit Stage -->
+  <div class="orbit-stage" id="orbit-stage">
+    <div class="orbit-ring"></div>
+    <div class="orbit-ring-inner"></div>
+    <div id="cards-container"></div>
+  </div>
+
+  <!-- Dots Navigation -->
+  <div class="dots-nav" id="dots-nav"></div>
+
+  <!-- Footer Link Strip -->
+  <div class="footer-bar">
+    <a href="https://github.com/krishna2650/smart-roster-management-system" target="_blank">GitHub Repository ↗</a>
+    <span>•</span>
+    <a href="https://datastraw-roster-backend.onrender.com" target="_blank">Render Live Deployment ↗</a>
+    <span>•</span>
+    <span>DataStraw Tech Internship Submission</span>
+  </div>
+
+  <script>
+    const CARDS_DATA = [
+      {
+        id: 'matrix',
+        category: 'SCHEDULING ENGINE',
+        badge: 'Core Solver',
+        title: '31-Day Real-Time Roster Matrix',
+        headline: 'Zero-Coverage-Gap Scheduling',
+        desc: 'Autonomous monthly solver allocating 30+ specialists across 12 client brands and 4 operational pods with 99.4%+ guaranteed SLA coverage.',
+        accent: '#3b82f6',
+        tag: '100% Process SLA',
+        tagColor: '#10b981',
+        stats: [
+          { val: '100%', lbl: 'Coverage' },
+          { val: '33', lbl: 'Specialists' },
+          { val: '12', lbl: 'Brands' },
+          { val: '<240ms', lbl: 'Solver Time' }
+        ],
+        features: ['Mon–Sat & Mon–Fri SLA Calendars', 'Automated Holiday Adjustments', 'One-Click Excel / CSV Export'],
+        ctaUrl: 'https://datastraw-roster-backend.onrender.com'
+      },
+      {
+        id: 'conflicts',
+        category: 'PREDICTIVE MONITORING',
+        badge: 'Predictive Defense',
+        title: 'Real-Time Conflict Center',
+        headline: 'Instant Single-Resource Breach Alerts',
+        desc: 'Proactively identifies coverage breaches before rosters go live. Automatically spots single-resource dependencies on brands like EcoGlow & UrbanFit.',
+        accent: '#f43f5e',
+        tag: '10 Critical Gaps Caught',
+        tagColor: '#ef4444',
+        stats: [
+          { val: '10', lbl: 'Active Alerts' },
+          { val: '100%', lbl: 'Resolution' },
+          { val: 'Real-Time', lbl: 'Detection' },
+          { val: 'Zero', lbl: 'Service Drop' }
+        ],
+        features: ['Cross-Brand Capability Matching', 'Leave-Impact Simulation', '1-Click Backup Reassignment'],
+        ctaUrl: 'https://datastraw-roster-backend.onrender.com'
+      },
+      {
+        id: 'swap',
+        category: 'WORKFORCE EMPOWERMENT',
+        badge: 'Peer Marketplace',
+        title: 'Peer-to-Peer Shift Swap Marketplace',
+        headline: 'Autonomous Peer Coverage Exchange',
+        desc: 'Empowers specialists to trade shifts without manager friction. Strict 5-point automated safety validation guarantees zero SLA or skill violations.',
+        accent: '#a855f7',
+        tag: '5 Safety Criteria',
+        tagColor: '#8b5cf6',
+        stats: [
+          { val: '5 Gates', lbl: 'Validation' },
+          { val: 'Instant', lbl: 'Approval' },
+          { val: '100%', lbl: 'Fairness' },
+          { val: '12h/mo', lbl: 'Manager Saved' }
+        ],
+        features: ['Process Skill Matching Gate', 'Pod Alignment Verification', 'Fatigue Rest Window Gate'],
+        ctaUrl: 'https://datastraw-roster-backend.onrender.com'
+      },
+      {
+        id: 'guardrail',
+        category: 'COMPLIANCE & WELLBEING',
+        badge: 'Burnout Guard',
+        title: 'Fatigue & Burnout Guardrail System',
+        headline: 'Strict >6 Consecutive Days Hard Stop',
+        desc: 'Automated health and wellness enforcement that prevents assigning specialists to more than 6 consecutive working days without a fair weekly rest day.',
+        accent: '#0ea5e9',
+        tag: 'Zero Burnout',
+        tagColor: '#06b6d4',
+        stats: [
+          { val: '6 Days', lbl: 'Max Streak' },
+          { val: 'Locked', lbl: '7th Day' },
+          { val: '98.8%', lbl: 'Health Score' },
+          { val: 'Optimal', lbl: 'Fairness' }
+        ],
+        features: ['7th Day Assignment Lockout', 'Rotating Rest Day Distribution', 'Labor Regulation Compliance'],
+        ctaUrl: 'https://datastraw-roster-backend.onrender.com'
+      },
+      {
+        id: 'telemetry',
+        category: 'HIGH AVAILABILITY',
+        badge: '24/7 Telemetry',
+        title: '24/7 Cloud Telemetry & Heartbeat',
+        headline: 'Continuous Pulse & Self-Healing Daemon',
+        desc: 'Silent 15-second background auto-polling and cloud keep-alive daemon keeping the system warm, live, and responsive 24 hours a day, 365 days a year.',
+        accent: '#10b981',
+        tag: '24/7 Active Sync',
+        tagColor: '#22c55e',
+        stats: [
+          { val: '15s', lbl: 'Auto-Poll' },
+          { val: 'Active', lbl: 'Keep-Alive' },
+          { val: '99.98%', lbl: 'Uptime' },
+          { val: 'Live', lbl: 'MongoDB' }
+        ],
+        features: ['Silent Auto-Sync without Flicker', 'Cloud Daemon Pinger Thread', 'Zero-Lockout Fallback Security'],
+        ctaUrl: 'https://datastraw-roster-backend.onrender.com'
+      },
+      {
+        id: 'mobile',
+        category: 'ACCESSIBLE DESIGN',
+        badge: 'Mobile First',
+        title: 'Mobile-First Off-Canvas Navigation',
+        headline: 'Zero-Compromise Touch Ergonomics',
+        desc: 'Comprehensive responsive layout featuring fluid off-canvas drawer navigation, optimized touch targets, and full-featured roster inspection on smartphones.',
+        accent: '#eab308',
+        tag: '100% Responsive',
+        tagColor: '#f59e0b',
+        stats: [
+          { val: '60 FPS', lbl: 'Drawer' },
+          { val: 'Mobile-4K', lbl: 'Displays' },
+          { val: '44px', lbl: 'Touch Targets' },
+          { val: 'AA+', lbl: 'Accessibility' }
+        ],
+        features: ['Off-Canvas Gesture Drawer', 'Adaptive Metric Scaling', 'Full Roster Grid Panning'],
+        ctaUrl: 'https://datastraw-roster-backend.onrender.com'
+      }
+    ];
+
+    let activeIndex = 0;
+    let isPlaying = true;
+    let speed = 'classic';
+    let timer = null;
+    let mouseOffset = { x: 0, y: 0 };
+
+    const stage = document.getElementById('orbit-stage');
+    const cardsContainer = document.getElementById('cards-container');
+    const dotsNav = document.getElementById('dots-nav');
+
+    // Create cards & dots DOM
+    function initDOM() {
+      cardsContainer.innerHTML = '';
+      dotsNav.innerHTML = '';
+
+      CARDS_DATA.forEach((card, idx) => {
+        // Create Card
+        const el = document.createElement('div');
+        el.className = 'orbit-card';
+        el.id = `card-${idx}`;
+        el.onclick = () => {
+          activeIndex = idx;
+          updateOrbit();
+        };
+
+        el.innerHTML = `
+          <div>
+            <div class="card-top">
+              <div>
+                <div class="card-category">${card.category}</div>
+                <div style="font-size:0.8rem; font-weight:700; color:${card.accent};">${card.badge}</div>
+              </div>
+              <span class="badge-pill" style="background:${card.tagColor}18; border:1px solid ${card.tagColor}44; color:${card.tagColor};">
+                ${card.tag}
+              </span>
+            </div>
+
+            <div class="card-title">${card.title}</div>
+            <div class="card-headline" style="color:${card.accent};">${card.headline}</div>
+            <div class="card-desc">${card.desc}</div>
+
+            <div class="stat-matrix">
+              ${card.stats.map(s => `
+                <div>
+                  <div class="stat-val">${s.val}</div>
+                  <div class="stat-lbl">${s.lbl}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div>
+              ${card.features.map(f => `
+                <div class="feature-item">
+                  <span class="feature-icon" style="color:${card.accent};">✓</span>
+                  <span>${f}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <span class="card-counter">Feature ${idx + 1} of ${CARDS_DATA.length}</span>
+            <a href="${card.ctaUrl}" target="_blank" class="card-cta" style="background:${card.accent};">
+              Explore Live ↗
+            </a>
+          </div>
+        `;
+        cardsContainer.appendChild(el);
+
+        // Create Dot
+        const dot = document.createElement('button');
+        dot.className = 'dot-btn';
+        dot.id = `dot-${idx}`;
+        dot.onclick = () => {
+          activeIndex = idx;
+          updateOrbit();
+        };
+        dotsNav.appendChild(dot);
+      });
+    }
+
+    function updateOrbit() {
+      const total = CARDS_DATA.length;
+      const radiusX = 380;
+      const radiusZ = 280;
+
+      CARDS_DATA.forEach((card, idx) => {
+        const el = document.getElementById(`card-${idx}`);
+        const dot = document.getElementById(`dot-${idx}`);
+        if (!el) return;
+
+        const offset = (idx - activeIndex + total) % total;
+        let angleDeg = offset * (360 / total);
+        if (angleDeg > 180) angleDeg -= 360;
+
+        const rad = (angleDeg * Math.PI) / 180;
+        const posX = Math.sin(rad) * radiusX;
+        const posZ = Math.cos(rad) * radiusZ - radiusZ;
+        const posY = Math.sin(rad * 0.5) * 20;
+
+        const isFront = offset === 0;
+        const scale = isFront ? 1.05 : Math.max(0.68, 1 + posZ / 600);
+        const opacity = isFront ? 1.0 : Math.max(0.35, 1 + posZ / 400);
+        const blur = isFront ? 0 : Math.min(3, Math.abs(posZ) / 120);
+        const rotateY = -angleDeg * 0.45 + mouseOffset.x;
+        const rotateX = mouseOffset.y;
+        const zIndex = Math.round(1000 + posZ);
+
+        el.style.transform = `translate3d(${posX}px, ${posY}px, ${posZ}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`;
+        el.style.opacity = opacity;
+        el.style.filter = `blur(${blur}px)`;
+        el.style.zIndex = zIndex;
+
+        if (isFront) {
+          el.classList.add('front');
+          dot.classList.add('active');
+        } else {
+          el.classList.remove('front');
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    function getDuration() {
+      if (speed === 'fast') return 3000;
+      if (speed === 'slow') return 7500;
+      return 4800;
+    }
+
+    function resetTimer() {
+      clearInterval(timer);
+      if (!isPlaying) return;
+      timer = setInterval(() => {
+        activeIndex = (activeIndex + 1) % CARDS_DATA.length;
+        updateOrbit();
+      }, getDuration());
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      document.getElementById('play-pause-icon').textContent = isPlaying ? '⏸' : '▶';
+      document.getElementById('play-pause-text').textContent = isPlaying ? 'Pause' : 'Play';
+      resetTimer();
+    }
+
+    function setSpeed(newSpeed) {
+      speed = newSpeed;
+      ['classic', 'fast', 'slow'].forEach(s => {
+        const btn = document.getElementById(`btn-speed-${s}`);
+        if (btn) btn.classList.toggle('active', s === newSpeed);
+      });
+      resetTimer();
+    }
+
+    function nextCard() {
+      activeIndex = (activeIndex + 1) % CARDS_DATA.length;
+      updateOrbit();
+      resetTimer();
+    }
+
+    function prevCard() {
+      activeIndex = (activeIndex - 1 + CARDS_DATA.length) % CARDS_DATA.length;
+      updateOrbit();
+      resetTimer();
+    }
+
+    // 3D perspective mouse tilt
+    window.addEventListener('mousemove', (e) => {
+      const rect = stage.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      mouseOffset = { x: x * 12, y: -y * 12 };
+      updateOrbit();
+    });
+
+    initDOM();
+    updateOrbit();
+    resetTimer();
+  </script>
+</body>
+</html>
