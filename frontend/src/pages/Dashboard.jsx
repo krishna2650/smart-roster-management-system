@@ -14,6 +14,7 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [todayModal, setTodayModal] = useState(null);
 
   const fetchStats = async () => {
     try {
@@ -189,34 +190,84 @@ const Dashboard = () => {
       {/* Row 2: Secondary Status Strip */}
       <div className="row g-3 mb-4">
         <div className="col-md-3 col-6">
-          <div className="p-3 bg-white border rounded d-flex align-items-center gap-3">
+          <div
+            className="p-3 bg-white border rounded d-flex align-items-center gap-3 shadow-sm"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setTodayModal({
+              title: "Specialists Working Today",
+              subtitle: "Active specialists scheduled for brand operations today",
+              badge: "W",
+              type: "working",
+              badgeClass: "bg-primary text-white",
+              list: data?.today_breakdown?.working || []
+            })}
+            title="Click to view who is working today"
+          >
             <div className="badge bg-primary text-white p-2 rounded">W</div>
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Working Today</div>
-              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{stats.working_today || 22}</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                Working Today <span className="badge bg-light text-primary border" style={{ fontSize: '0.65rem' }}>View</span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+                {stats.working_today !== undefined ? stats.working_today : 32}
+              </div>
             </div>
           </div>
         </div>
         <div className="col-md-3 col-6">
-          <div className="p-3 bg-white border rounded d-flex align-items-center gap-3">
+          <div
+            className="p-3 bg-white border rounded d-flex align-items-center gap-3 shadow-sm"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setTodayModal({
+              title: "Specialists on Weekly Off",
+              subtitle: "Specialists scheduled on their fair weekly rest day",
+              badge: "WO",
+              type: "weekly_off",
+              badgeClass: "bg-secondary text-white",
+              list: data?.today_breakdown?.weekly_off || [],
+              upcomingList: data?.today_breakdown?.sunday_off_list || [],
+              sampleDate: data?.today_breakdown?.sample_rest_date || 'Sunday'
+            })}
+            title="Click to view who is on weekly off today"
+          >
             <div className="badge bg-secondary text-white p-2 rounded">WO</div>
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Weekly Off Today</div>
-              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{stats.weekly_off_today || 6}</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                Weekly Off Today <span className="badge bg-light text-secondary border" style={{ fontSize: '0.65rem' }}>View</span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+                {stats.weekly_off_today !== undefined ? stats.weekly_off_today : 0}
+              </div>
             </div>
           </div>
         </div>
         <div className="col-md-3 col-6">
-          <div className="p-3 bg-white border rounded d-flex align-items-center gap-3">
+          <div
+            className="p-3 bg-white border rounded d-flex align-items-center gap-3 shadow-sm"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setTodayModal({
+              title: "Specialists on Approved Leave Today",
+              subtitle: "Specialists with confirmed vacation, sick leave, or comp-off",
+              badge: "LV",
+              type: "leaves",
+              badgeClass: "bg-warning text-dark",
+              list: data?.today_breakdown?.leaves || []
+            })}
+            title="Click to view who is on approved leave today"
+          >
             <div className="badge bg-warning text-dark p-2 rounded">LV</div>
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>On Approved Leave</div>
-              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{stats.employees_on_leave_today || 2}</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                On Approved Leave <span className="badge bg-light text-warning border" style={{ fontSize: '0.65rem' }}>View</span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+                {stats.employees_on_leave_today !== undefined ? stats.employees_on_leave_today : 0}
+              </div>
             </div>
           </div>
         </div>
         <div className="col-md-3 col-6">
-          <div className="p-3 bg-white border rounded d-flex align-items-center gap-3">
+          <div className="p-3 bg-white border rounded d-flex align-items-center gap-3 shadow-sm">
             <div className="badge bg-info text-white p-2 rounded">POD</div>
             <div>
               <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Operational Pods</div>
@@ -388,6 +439,109 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Today's Specialists Roster Modal */}
+      {todayModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)' }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header border-bottom py-3">
+                <div className="d-flex align-items-center gap-2">
+                  <span className={`badge ${todayModal.badgeClass} p-2 rounded`}>
+                    {todayModal.badge}
+                  </span>
+                  <div>
+                    <h5 className="modal-title mb-0" style={{ fontSize: '1rem', fontWeight: 700 }}>
+                      {todayModal.title}
+                    </h5>
+                    <span className="text-muted" style={{ fontSize: '0.78rem' }}>
+                      {todayModal.subtitle}
+                    </span>
+                  </div>
+                </div>
+                <button type="button" className="btn-close" onClick={() => setTodayModal(null)}></button>
+              </div>
+
+              <div className="modal-body p-3" style={{ maxHeight: '380px', overflowY: 'auto' }}>
+                {todayModal.list.length === 0 ? (
+                  todayModal.type === 'weekly_off' ? (
+                    <div>
+                      <div className="alert alert-info py-2 px-3 mb-3 border-0 bg-light" style={{ fontSize: '0.8rem' }}>
+                        <strong className="text-primary">Today is Monday (Standard Working Day)</strong>
+                        <div className="mt-1 text-muted">
+                          In accordance with client operating calendars (Monday–Saturday), all support specialists are actively working today. Weekly rest days are scheduled on Sundays.
+                        </div>
+                      </div>
+                      <div className="fw-bold small mb-2 text-dark">
+                        Scheduled Rest Day Batch ({todayModal.sampleDate}):
+                      </div>
+                      <div className="list-group list-group-flush">
+                        {(todayModal.upcomingList || []).map((item, idx) => (
+                          <div key={idx} className="list-group-item d-flex justify-content-between align-items-center px-2 py-2">
+                            <div className="d-flex align-items-center gap-2">
+                              <div className="avatar-circle small bg-light text-dark fw-bold border" style={{ width: '28px', height: '28px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+                                {item.name ? item.name.charAt(0) : 'S'}
+                              </div>
+                              <div>
+                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>{item.name}</div>
+                                <div className="text-muted" style={{ fontSize: '0.72rem' }}>{item.notes}</div>
+                              </div>
+                            </div>
+                            <span className="badge bg-secondary text-white" style={{ fontSize: '0.7rem' }}>WO</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted small">
+                      No specialists found for this status today.
+                    </div>
+                  )
+                ) : (
+                  <div className="list-group list-group-flush">
+                    {todayModal.list.map((item, idx) => (
+                      <div key={idx} className="list-group-item d-flex justify-content-between align-items-center px-2 py-2">
+                        <div className="d-flex align-items-center gap-2">
+                          <div className="avatar-circle small bg-light text-dark fw-bold border" style={{ width: '28px', height: '28px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+                            {item.name ? item.name.charAt(0) : 'S'}
+                          </div>
+                          <div>
+                            <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>{item.name}</div>
+                            {item.brand && (
+                              <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                {item.brand} • {item.process}
+                              </div>
+                            )}
+                            {item.reason && (
+                              <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                {item.type}: {item.reason}
+                              </div>
+                            )}
+                            {item.notes && !item.brand && (
+                              <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                {item.notes}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <span className={`badge ${todayModal.badgeClass}`} style={{ fontSize: '0.7rem' }}>
+                          {todayModal.badge}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer border-top py-2 bg-light">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setTodayModal(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

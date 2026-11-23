@@ -28,6 +28,15 @@ def get_stats():
         "end_date": {"$gte": today_str}
     }))
     employees_on_leave_today = len(leaves_today)
+    leaves_today_list = [
+        {
+            "id": str(l.get("employee_id")),
+            "name": l.get("employee_name", "Specialist"),
+            "type": l.get("type"),
+            "reason": l.get("reason")
+        }
+        for l in leaves_today
+    ]
 
     # 3. Check current month's latest roster
     now = datetime.now()
@@ -41,12 +50,58 @@ def get_stats():
     working_today = 0
     weekly_off_today = 0
     coverage_percentage = 0.0
+    working_today_list = []
+    weekly_off_today_list = []
 
     if roster:
         coverage_percentage = roster.get("coverage_summary", {}).get("coverage_percentage", 0.0)
         today_entries = [e for e in roster.get("entries", []) if e.get("date") == today_str]
-        working_today = len([e for e in today_entries if e.get("status") == "WORKING"])
-        weekly_off_today = len([e for e in today_entries if e.get("status") == "WEEKLY_OFF"])
+        
+        seen_work = set()
+        for e in today_entries:
+            if e.get("status") == "WORKING":
+                eid = str(e.get("employee_id"))
+                if eid and eid not in seen_work:
+                    seen_work.add(eid)
+                    working_today_list.append({
+                        "id": eid,
+                        "name": e.get("employee_name"),
+                        "brand": e.get("brand_name"),
+                        "process": e.get("process_name")
+                    })
+
+        seen_off = set()
+        for e in today_entries:
+            if e.get("status") == "WEEKLY_OFF":
+                eid = str(e.get("employee_id"))
+                if eid and eid not in seen_off:
+                    seen_off.add(eid)
+                    weekly_off_today_list.append({
+                        "id": eid,
+                        "name": e.get("employee_name"),
+                        "notes": e.get("notes")
+                    })
+
+        working_today = len(working_today_list) if working_today_list else len([e for e in today_entries if e.get("status") == "WORKING"])
+        weekly_off_today = len(weekly_off_today_list) if weekly_off_today_list else len([e for e in today_entries if e.get("status") == "WEEKLY_OFF"])
+
+        # Upcoming scheduled rest day list (for when today is a standard weekday)
+        sunday_off_list = []
+        sample_sunday = None
+        all_wo_entries = [e for e in roster.get("entries", []) if e.get("status") == "WEEKLY_OFF"]
+        if all_wo_entries:
+            sample_sunday = all_wo_entries[0].get("date")
+            seen_sun = set()
+            for e in all_wo_entries:
+                if e.get("date") == sample_sunday:
+                    eid = str(e.get("employee_id"))
+                    if eid and eid not in seen_sun:
+                        seen_sun.add(eid)
+                        sunday_off_list.append({
+                            "id": eid,
+                            "name": e.get("employee_name"),
+                            "notes": f"Scheduled Rest Day ({sample_sunday})"
+                        })
 
     # 4. Conflicts
     unresolved_conflicts = db[CONFLICTS_COL].count_documents({"resolution_status": "UNRESOLVED"})
@@ -138,5 +193,12 @@ def get_stats():
             "status_distribution": status_distribution
         },
         "upcoming_holidays": serialize_doc(upcoming_holidays),
-        "recent_activity": recent_activity
+        "recent_activity": recent_activity,
+        "today_breakdown": {
+            "working": working_today_list,
+            "weekly_off": weekly_off_today_list,
+            "leaves": leaves_today_list,
+            "sunday_off_list": sunday_off_list,
+            "sample_rest_date": sample_sunday
+        }
     })
