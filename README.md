@@ -342,27 +342,6 @@ Use the one-click demo role switcher in the top navigation bar or log in with:
 
 ---
 
-## 11. 3–5 Minute Demo Video Walkthrough Script
 
-| Scene | Duration | Screen Location | Talking Points & Actions |
-|:---:|:---:|---|---|
-| **Scene 1** | 0:00 – 0:45 | [Dashboard](http://localhost:3000/) | Introduce system, 32 specialists, 12 brands, 4 operational pods, live telemetry cards. |
-| **Scene 2** | 0:45 – 1:30 | [Brands Directory](http://localhost:3000/brands) | Explain asymmetrical staffing (~80% single-resource like EcoGlow, 365-day vs Mon–Sat calendars). |
-| **Scene 3** | 1:30 – 2:30 | [Roster Engine](http://localhost:3000/roster) | Select Dec 2026, click **Generate**, show 5 views (Company, Pod, Brand, Process, Specialist), point out dynamic **`TODAY`** highlight. |
-| **Scene 4** | 2:30 – 3:45 | [Conflict Center](http://localhost:3000/conflicts) | Show EcoGlow gap on Dec 15, inspect ranked backup candidates, click **Assign Backup**, show instant revalidation. |
-| **Scene 5** | 3:45 – 4:30 | [Reports](http://localhost:3000/reports) | Demonstrate CSV streaming exports and Fatigue Guardrail telemetry. Conclude presentation. |
 
----
 
-## 12. Submission Approach Note & Deliverables
-
-> We solved DataStraw's workforce scheduling challenge by modeling operational relationships as decoupled, first-class entities in MongoDB and developing a deterministic, rule-based constraint satisfaction engine in Python. The system differentiates between single-resource and multi-employee brand structures, rigorously enforces client operating calendars, and automatically detects unstaffed gaps with intelligent backup recommendation heuristics. A modern React enterprise dashboard provides comprehensive management views, interactive cell adjustments, and publication safeguards that preserve client SLAs.
-
-### Official Submission Files
-* **GitHub Repository**: [https://github.com/krishna2650/smart-roster-management-system](https://github.com/krishna2650/smart-roster-management-system)
-* **Official Submission PDF**: [DataStraw_Smart_Roster_Management_System_Submission.pdf](DataStraw_Smart_Roster_Management_System_Submission.pdf) (290.8 KB)
-* **Video Script & Approach Note**: [demo_video_script_and_approach_note.md](demo_video_script_and_approach_note.md)
-* **Submission Recipients**:
-  - **To**: `ozair.shaikh@datastraw.in`, `aryan.jaiswal@datastraw.in`
-  - **CC**: `talent@datastraw.in`
-  - **Subject**: `Smart Roster Management System Assignment - Krishna`
