@@ -14,6 +14,7 @@ import {
   FileSpreadsheet,
   Settings,
   Workflow,
+  Sparkles,
   X
 } from 'lucide-react';
 
@@ -21,6 +22,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   const navItems = [
     { section: "CORE OPERATIONS" },
     { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/showreel", icon: Sparkles, label: "3D Orbit Showreel", badge: "Demo" },
     { to: "/roster", icon: CalendarRange, label: "Roster Management", badge: "Engine" },
     { to: "/conflicts", icon: AlertTriangle, label: "Conflict Center" },
     { to: "/change-workflow", icon: Workflow, label: "Change Management" },

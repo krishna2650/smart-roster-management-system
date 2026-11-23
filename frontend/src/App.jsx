@@ -20,6 +20,7 @@ import ChangeManagement from './pages/ChangeManagement';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import Showreel from './pages/Showreel';
 
 // Layout wrapper for authenticated pages
 const AppLayout = ({ children }) => {
@@ -63,6 +64,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           
           <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+          <Route path="/showreel" element={<AppLayout><Showreel /></AppLayout>} />
           <Route path="/roster" element={<AppLayout><RosterManagement /></AppLayout>} />
           <Route path="/conflicts" element={<AppLayout><ConflictCenter /></AppLayout>} />
           <Route path="/change-workflow" element={<AppLayout><ChangeManagement /></AppLayout>} />

@@ -28,6 +28,7 @@ const Navbar = ({ onToggleMobileSidebar }) => {
   const getPageTitle = (pathname) => {
     switch (pathname) {
       case '/': return 'Executive Operations Dashboard';
+      case '/showreel': return '3D Orbit Showcase & System Motion Tour';
       case '/roster': return 'Monthly Roster Management & Scheduling Matrix';
       case '/conflicts': return 'Operational Conflict Detection Center';
       case '/change-workflow': return 'Change Management & Backup Reassignment';
