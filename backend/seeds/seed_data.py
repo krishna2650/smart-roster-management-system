@@ -813,6 +813,45 @@ def seed_database():
         "is_primary": True
     })
 
+    # Assign reserve specialists EMP-017 through EMP-032 to active brand shifts within their pods
+    emp_map_by_code = {e["employee_id"]: e["_id"] for e in employees_data}
+    proc_map_by_code = {p["process_id"]: (p["_id"], p["brand_id"]) for p in processes_data}
+
+    additional_assignments = [
+        ("EMP-017", "VEL-CS"),
+        ("EMP-018", "PUR-ACC"),
+        ("EMP-019", "VEL-NDR"),
+        ("EMP-020", "URB-CS"),
+        ("EMP-021", "NUT-ACC"),
+        ("EMP-022", "KET-NDR"),
+        ("EMP-023", "URB-NDR"),
+        ("EMP-024", "AUD-CS"),
+        ("EMP-025", "SMA-ACC"),
+        ("EMP-026", "LUX-CS"),
+        ("EMP-027", "GLO-ACC"),
+        ("EMP-028", "VOLT-CS"),
+        ("EMP-029", "LUX-NDR"),
+        ("EMP-030", "PUR-CS"),
+        ("EMP-031", "NUT-CS"),
+        ("EMP-032", "ZEN-CS"),
+    ]
+
+    for emp_code, proc_code in additional_assignments:
+        e_id = emp_map_by_code.get(emp_code)
+        if e_id and proc_code in proc_map_by_code:
+            pr_id, b_id = proc_map_by_code[proc_code]
+            assignments_data.append({
+                "_id": ObjectId(),
+                "employee_id": e_id,
+                "brand_id": b_id,
+                "process_id": pr_id,
+                "effective_start_date": "2024-01-01",
+                "effective_end_date": None,
+                "status": "Active",
+                "allocation_percentage": 100,
+                "is_primary": False
+            })
+
     db[ASSIGNMENTS_COL].insert_many(assignments_data)
     print(f"Inserted {len(assignments_data)} assignments.")
 
