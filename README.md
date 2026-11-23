@@ -9,6 +9,7 @@
 [![Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-green?style=for-the-badge&logo=mongodb)](backend/database.py)
 
 ---
+LIVE DEMO :https://smart-roster-management-system-1-bfo5.onrender.com/
 
 ## 📑 Table of Contents
 1. [Executive Summary & Problem Statement](#1-executive-summary--problem-statement)
