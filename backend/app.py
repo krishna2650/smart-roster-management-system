@@ -1,4 +1,7 @@
 import os
+import threading
+import time
+import urllib.request
 from flask import Flask, jsonify
 from flask_cors import CORS
 from config import Config
@@ -82,8 +85,32 @@ def create_app():
 
     return app
 
+def start_render_keep_alive():
+    """Background thread that pings /api/health every 9 minutes so Render instance stays awake 24/7."""
+    def pinger():
+        time.sleep(25)  # Initial wait for server binding
+        ext_url = os.environ.get("RENDER_EXTERNAL_URL") or "https://datastraw-roster-backend.onrender.com"
+        target = f"{ext_url.rstrip('/')}/api/health"
+        print(f"[KeepAlive 24/7] Active worker initialized for: {target}")
+        while True:
+            try:
+                time.sleep(540)  # Every 9 minutes (Render sleeps after 15 mins idle)
+                req = urllib.request.Request(
+                    target,
+                    headers={"User-Agent": "DataStraw-KeepAlive-24h/1.0"}
+                )
+                with urllib.request.urlopen(req, timeout=25) as res:
+                    print(f"[KeepAlive 24/7] Heartbeat OK -> HTTP {res.status}")
+            except Exception:
+                pass
+
+    if os.environ.get("RENDER") or os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("PORT"):
+        t = threading.Thread(target=pinger, daemon=True)
+        t.start()
+
 app = create_app()
+start_render_keep_alive()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)

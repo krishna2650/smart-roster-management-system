@@ -18,23 +18,30 @@ const Dashboard = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [todayModal, setTodayModal] = useState(null);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
 
-  const fetchStats = async () => {
+  const fetchStats = async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       const res = await api.get('/dashboard/stats');
       setData(res.data);
+      setLastSyncTime(new Date());
       return res.data;
     } catch (err) {
       console.error("Dashboard fetch error:", err);
-      throw err;
+      if (!isBackground) throw err;
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchStats();
+    // Live 24/7 background polling: automatically synchronizes every 15 seconds
+    const intervalId = setInterval(() => {
+      fetchStats(true);
+    }, 15000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleRefresh = async () => {
@@ -99,9 +106,9 @@ const Dashboard = () => {
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
               Enterprise Workforce & Operations Pulse
             </h2>
-            <span className="badge bg-success-subtle text-success border border-success-subtle d-none d-sm-inline-flex align-items-center gap-1 px-2 py-1" style={{ fontSize: '0.72rem' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }}></span>
-              Live Sync
+            <span className="badge bg-success-subtle text-success border border-success-subtle d-inline-flex align-items-center gap-1 px-2 py-1" style={{ fontSize: '0.72rem', fontWeight: 600 }}>
+              <span className="live-pulse-dot"></span>
+              LIVE 24/7 {lastSyncTime ? `• ${lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : '• Syncing'}
             </span>
           </div>
           <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>
