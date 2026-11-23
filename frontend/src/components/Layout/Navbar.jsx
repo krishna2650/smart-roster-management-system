@@ -28,6 +28,8 @@ const Navbar = ({ onToggleMobileSidebar }) => {
   const getPageTitle = (pathname) => {
     switch (pathname) {
       case '/': return 'Executive Operations Dashboard';
+      case '/3d': return 'Realistic 3D WebGL World & Interactive Spatial Engine';
+      case '/realistic-3d': return 'Realistic 3D WebGL World & Interactive Spatial Engine';
       case '/showreel': return '3D Orbit Showcase & System Motion Tour';
       case '/roster': return 'Monthly Roster Management & Scheduling Matrix';
       case '/conflicts': return 'Operational Conflict Detection Center';
