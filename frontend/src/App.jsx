@@ -34,6 +34,10 @@ const AppLayout = ({ children }) => {
     );
   }
 
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <div className="app-container">
       <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />

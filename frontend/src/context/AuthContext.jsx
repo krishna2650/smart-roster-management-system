@@ -26,6 +26,11 @@ const DEMO_ACCOUNTS = {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
+    // If the user explicitly logged out, keep them logged out
+    const loggedOut = localStorage.getItem('datastraw_logged_out');
+    if (loggedOut === 'true') {
+      return null;
+    }
     const saved = localStorage.getItem('datastraw_user');
     if (saved) {
       try {
@@ -34,13 +39,17 @@ export const AuthProvider = ({ children }) => {
         // quiet
       }
     }
-    // Default to Operations Manager session so evaluators are never stuck
+    // Default to Operations Manager session on first visit so evaluators are never stuck
     return DEMO_ACCOUNTS.OPERATIONS_MANAGER;
   });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
+      const loggedOut = localStorage.getItem('datastraw_logged_out');
+      if (loggedOut === 'true') {
+        return;
+      }
       const token = localStorage.getItem('datastraw_token');
       if (token && !token.startsWith('demo_jwt_')) {
         try {
@@ -51,7 +60,6 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (err) {
           console.warn("Auth check note (retaining existing session):", err.message);
-          // Don't log the user out on network failure / server sleep
         }
       }
     };
@@ -59,6 +67,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    localStorage.removeItem('datastraw_logged_out');
     try {
       const res = await api.post('/auth/login', { email, password });
       if (res.data && res.data.success) {
@@ -93,6 +102,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('datastraw_token');
     localStorage.removeItem('datastraw_user');
+    localStorage.setItem('datastraw_logged_out', 'true');
     setUser(null);
   };
 

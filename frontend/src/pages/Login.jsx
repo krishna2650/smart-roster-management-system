@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { CalendarRange, Lock, Mail, ArrowRight, ShieldCheck, UserCheck, UserCog, Shield } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, loginAsDemo } = useAuth();
+  const { user, login, loginAsDemo } = useAuth();
   const [email, setEmail] = useState('manager@datastraw.com');
   const [password, setPassword] = useState('manager123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

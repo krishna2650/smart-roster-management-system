@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Bell, AlertTriangle, User, LogOut, CheckCircle, Calendar, Shield, UserCog, UserCheck, Menu } from 'lucide-react';
 import api from '../../services/api';
 
 const Navbar = ({ onToggleMobileSidebar }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout, loginAsDemo } = useAuth();
   const [criticalConflicts, setCriticalConflicts] = useState(0);
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   // Dynamic date tick: auto-updates every 30 seconds so date advances every day at midnight
   useEffect(() => {
@@ -176,7 +182,7 @@ const Navbar = ({ onToggleMobileSidebar }) => {
             </li>
             <li><hr className="dropdown-divider" /></li>
             <li>
-              <button className="dropdown-item text-danger d-flex align-items-center gap-2" onClick={logout}>
+              <button className="dropdown-item text-danger d-flex align-items-center gap-2" onClick={handleLogout}>
                 <LogOut size={14} /> Logout
               </button>
             </li>
