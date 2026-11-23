@@ -100,7 +100,7 @@ def find_backup_candidates(db, date_str, process_id, brand_id, required_skills=N
 
 class RosterEngine:
     def __init__(self, db=None):
-        self.db = db or get_db()
+        self.db = db if db is not None else get_db()
 
     def generate_roster(self, year: int, month: int, created_by=None):
         """
