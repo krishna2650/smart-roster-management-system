@@ -12,6 +12,7 @@ from models.schemas import (
 reports_bp = Blueprint("reports", __name__, url_prefix="/api/reports")
 
 @reports_bp.route("/summary", methods=["GET"])
+@reports_bp.route("/sla", methods=["GET"])
 def get_reports_summary():
     db = get_db()
     roster_id = request.args.get("roster_id")

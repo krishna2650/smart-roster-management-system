@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 import Sidebar from './components/Layout/Sidebar';
 import Navbar from './components/Layout/Navbar';
+import Chatbot from './components/Common/Chatbot';
 
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
@@ -42,6 +43,7 @@ const AppLayout = ({ children }) => {
           {children}
         </main>
       </div>
+      <Chatbot />
     </div>
   );
 };

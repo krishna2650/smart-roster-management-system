@@ -161,7 +161,7 @@ const Holidays = () => {
                     </td>
                     <td>
                       <span className="badge bg-light text-primary border font-monospace" style={{ fontSize: '0.78rem' }}>
-                        📅 {h.date}
+                        {h.date}
                       </span>
                     </td>
                     <td>{h.description || 'Public Holiday'}</td>

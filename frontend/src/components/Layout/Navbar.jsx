@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Bell, AlertTriangle, User, LogOut, CheckCircle } from 'lucide-react';
+import { Bell, AlertTriangle, User, LogOut, CheckCircle, Calendar, Shield, UserCog, UserCheck } from 'lucide-react';
 import api from '../../services/api';
 
 const Navbar = () => {
@@ -67,9 +67,13 @@ const Navbar = () => {
           background: '#f1f5f9',
           padding: '0.4rem 0.75rem',
           borderRadius: '6px',
-          border: '1px solid #e2e8f0'
+          border: '1px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.4rem'
         }}>
-          📅 {todayFormatted}
+          <Calendar size={14} className="text-secondary" />
+          <span>{todayFormatted}</span>
         </div>
 
         {/* Conflict Alert Pill */}
@@ -126,18 +130,18 @@ const Navbar = () => {
           <ul className="dropdown-menu dropdown-menu-end shadow-sm" style={{ fontSize: '0.85rem' }}>
             <li><h6 className="dropdown-header">Switch Demo Role</h6></li>
             <li>
-              <button className="dropdown-item" onClick={() => loginAsDemo('ADMIN')}>
-                👑 Admin (Full Access)
+              <button className="dropdown-item d-flex align-items-center gap-2" onClick={() => loginAsDemo('ADMIN')}>
+                <UserCog size={14} className="text-primary" /> Admin (Full Access)
               </button>
             </li>
             <li>
-              <button className="dropdown-item" onClick={() => loginAsDemo('OPERATIONS_MANAGER')}>
-                📋 Operations Manager
+              <button className="dropdown-item d-flex align-items-center gap-2" onClick={() => loginAsDemo('OPERATIONS_MANAGER')}>
+                <UserCheck size={14} className="text-primary" /> Operations Manager
               </button>
             </li>
             <li>
-              <button className="dropdown-item" onClick={() => loginAsDemo('POD_LEAD')}>
-                🛡️ Alpha Pod Lead
+              <button className="dropdown-item d-flex align-items-center gap-2" onClick={() => loginAsDemo('POD_LEAD')}>
+                <Shield size={14} className="text-primary" /> Alpha Pod Lead
               </button>
             </li>
             <li><hr className="dropdown-divider" /></li>

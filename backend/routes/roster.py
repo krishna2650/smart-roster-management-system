@@ -89,8 +89,8 @@ def publish(r_id):
     engine = RosterEngine(db)
     result = engine.publish_roster(r_id, published_by=published_by)
     if not result.get("success"):
-        return jsonify(result), 400
-    return jsonify(result)
+        return jsonify(serialize_doc(result)), 400
+    return jsonify(serialize_doc(result))
 
 @roster_bp.route("/<r_id>/entry", methods=["PUT"])
 def update_entry(r_id):
@@ -170,6 +170,7 @@ def reassign_backup(r_id):
     data = request.get_json(silent=True) or {}
     target_date = data.get("date")
     process_id = data.get("process_id")
+    brand_id = data.get("brand_id")
     backup_employee_id = to_object_id(data.get("employee_id"))
 
     emp = db[EMPLOYEES_COL].find_one({"_id": backup_employee_id})
@@ -180,40 +181,25 @@ def reassign_backup(r_id):
     gap_fixed_count = 0
     for e in entries:
         matches_proc = (not process_id) or (str(e.get("process_id")) == str(process_id))
-        if e.get("date") == target_date and matches_proc and e.get("status") == "COVERAGE_GAP":
+        matches_brand = (not brand_id) or (str(e.get("brand_id")) == str(brand_id))
+        if e.get("date") == target_date and matches_brand and matches_proc and e.get("status") == "COVERAGE_GAP":
             e["employee_id"] = backup_employee_id
             e["employee_name"] = emp["full_name"]
             e["status"] = "WORKING"
             e["notes"] = f"Relief backup assigned ({emp['full_name']})"
             gap_fixed_count += 1
-            if process_id:
+            if process_id and not brand_id:
                 break
 
     if gap_fixed_count > 0:
-        # Update roster coverage count
-        summary = roster.get("coverage_summary", {})
-        summary["total_gaps"] = max(0, summary.get("total_gaps", 0) - gap_fixed_count)
-        summary["total_process_days_covered"] = summary.get("total_process_days_covered", 0) + gap_fixed_count
-        if summary.get("total_process_days_required", 0) > 0:
-            summary["coverage_percentage"] = round(
-                summary["total_process_days_covered"] / summary["total_process_days_required"] * 100, 2
-            )
+        conflict_query = {"roster_id": roster["_id"], "date": target_date}
+        if brand_id:
+            conflict_query["brand_id"] = to_object_id(brand_id)
+        elif process_id:
+            conflict_query["process_id"] = to_object_id(process_id)
 
-        db[ROSTERS_COL].update_one({"_id": roster["_id"]}, {
-            "$set": {
-                "entries": entries,
-                "coverage_summary": summary,
-                "updated_at": datetime.now()
-            }
-        })
-
-        # Mark conflict as RESOLVED
-        db[CONFLICTS_COL].update_one(
-            {
-                "roster_id": roster["_id"],
-                "date": target_date,
-                "process_id": to_object_id(process_id)
-            },
+        db[CONFLICTS_COL].update_many(
+            conflict_query,
             {
                 "$set": {
                     "resolution_status": "RESOLVED",
@@ -230,3 +216,52 @@ def reassign_backup(r_id):
         "message": f"Backup employee {emp['full_name']} assigned successfully.",
         "validation": serialize_doc(val_report)
     })
+
+@roster_bp.route("/<roster_id>/fatigue", methods=["GET"])
+def get_roster_fatigue(roster_id):
+    """
+    Returns fatigue & burnout analysis for specialists in the roster month.
+    """
+    db = get_db()
+    engine = RosterEngine(db)
+    data = engine.detect_fatigue_risks(roster_id)
+    return jsonify(serialize_doc(data))
+
+@roster_bp.route("/<roster_id>/swap/prevalidate", methods=["POST"])
+def prevalidate_swap(roster_id):
+    """
+    Algorithmic pre-validation of a shift swap between two specialists.
+    """
+    db = get_db()
+    body = request.get_json(silent=True) or {}
+    emp_a_id = body.get("emp_a_id")
+    date_a = body.get("date_a")
+    emp_b_id = body.get("emp_b_id")
+    date_b = body.get("date_b")
+
+    if not all([emp_a_id, date_a, emp_b_id, date_b]):
+        return jsonify({"error": "emp_a_id, date_a, emp_b_id, date_b are all required"}), 400
+
+    engine = RosterEngine(db)
+    res = engine.prevalidate_shift_swap(roster_id, emp_a_id, date_a, emp_b_id, date_b)
+    return jsonify(serialize_doc(res))
+
+@roster_bp.route("/<roster_id>/swap/execute", methods=["POST"])
+def execute_swap(roster_id):
+    """
+    Executes shift swap atomically and revalidates active roster.
+    """
+    db = get_db()
+    body = request.get_json(silent=True) or {}
+    emp_a_id = body.get("emp_a_id")
+    date_a = body.get("date_a")
+    emp_b_id = body.get("emp_b_id")
+    date_b = body.get("date_b")
+
+    if not all([emp_a_id, date_a, emp_b_id, date_b]):
+        return jsonify({"error": "emp_a_id, date_a, emp_b_id, date_b are all required"}), 400
+
+    engine = RosterEngine(db)
+    res = engine.execute_shift_swap(roster_id, emp_a_id, date_a, emp_b_id, date_b)
+    return jsonify(serialize_doc(res))
+

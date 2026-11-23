@@ -168,7 +168,7 @@ const ConflictCenter = () => {
                       {c.conflict_id}
                     </span>
                     <span className="badge bg-light text-primary border font-monospace">
-                      📅 Date: {c.date}
+                      Date: {c.date}
                     </span>
                   </div>
 
@@ -279,8 +279,8 @@ const ConflictCenter = () => {
                           </div>
                           <div className="mt-1 d-flex flex-wrap gap-1">
                             {cand.reasons.map((r, i) => (
-                              <span key={i} className="badge bg-light text-dark border" style={{ fontSize: '0.7rem' }}>
-                                ✓ {r}
+                              <span key={i} className="badge bg-light text-secondary border" style={{ fontSize: '0.7rem' }}>
+                                {r}
                               </span>
                             ))}
                           </div>

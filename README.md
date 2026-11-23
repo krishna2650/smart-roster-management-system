@@ -2,7 +2,8 @@
 
 > Production-grade workforce scheduling, constraint satisfaction, and operational conflict resolution platform designed for D2C customer operations teams managing multiple brands, pods, and specialized workflows.
 
-[![Test Suite](https://img.shields.io/badge/Test%20Suite-18%20Passed%20(100%25)-success)](backend/tests/)
+[![Test Suite](https://img.shields.io/badge/Test%20Suite-51%20Passed%20(100%25)-success)](verify_all_features.py)
+[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-18%20Passed%20(100%25)-success)](backend/tests/)
 [![Python](https://img.shields.io/badge/Backend-Python%20%7C%20Flask%20%7C%20PyMongo-blue)](backend/)
 [![React](https://img.shields.io/badge/Frontend-React%20%7C%20Vite%20%7C%20Bootstrap-61dafb)](frontend/)
 [![Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-green)](backend/database.py)
@@ -114,6 +115,29 @@ When a coverage gap occurs, the recommendation engine calculates candidate score
 $$\text{Score} = 10 \text{ (Base Availability)} + 50 \times \mathbb{I}(\text{Same Pod}) + 25 \times \sum \mathbb{I}(\text{Matching Skills})$$
 - Only active employees who are **NOT on leave** and **NOT already scheduled** on that date are considered.
 - Candidates are ranked and surfaced in the Conflict Center with one-click reassignment.
+
+---
+
+### Enterprise Extensions: Fatigue Guardrail & Peer-to-Peer Shift Swap
+
+1. **Fatigue & Burnout Guardrail Monitoring (Max 6 Consecutive Days)**:
+   - Evaluates continuous working day streaks for all 32 specialists across the active roster month.
+   - Flags specialists working $>6$ consecutive days without a mandatory rest day (`WEEKLY_OFF`).
+   - Categorizes violations into **WARNING (7 days)** and **CRITICAL ($\ge 8$ days)** with real-time UI telemetry and relief recommendations.
+
+2. **Peer-to-Peer Shift Swap Marketplace with 5-Stage Algorithmic Pre-Validation**:
+   - Specialists and managers can propose duty exchanges via an interactive modal.
+   - Evaluates 5 safety criteria before execution:
+     - **Shift Existence:** Confirms both shifts exist in the active roster.
+     - **No Schedule Collision:** Prevents double-booking on target exchange dates.
+     - **Leave & Availability:** Confirms zero approved PTO, sick leave, or comp-offs.
+     - **Skill & Brand Compatibility:** Verifies specialist skills match client requirements.
+     - **Fatigue Guardrail:** Ensures neither specialist exceeds 6 consecutive working days.
+   - Executes swaps atomically and auto-revalidates the entire monthly roster.
+
+3. **AI Operations Copilot**:
+   - Floating interactive assistant accessible on every page powered by MongoDB RAG telemetry.
+   - Answers natural language questions on workforce availability, shift allocations, brand operating rules, and conflict resolutions.
 
 ---
 

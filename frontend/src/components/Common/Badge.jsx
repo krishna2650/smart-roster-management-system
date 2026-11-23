@@ -31,7 +31,7 @@ export const StatusBadge = ({ status, onClick, notes }) => {
       break;
     case 'COVERAGE_GAP':
       badgeClass = 'badge-coverage-gap';
-      label = 'GAP!';
+      label = 'GAP';
       break;
     default:
       label = status;

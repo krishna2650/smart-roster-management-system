@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CalendarRange, Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CalendarRange, Lock, Mail, ArrowRight, ShieldCheck, UserCheck, UserCog, Shield } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -113,24 +113,24 @@ const Login = () => {
             <div className="d-grid gap-2">
               <button
                 type="button"
-                className="btn btn-outline-primary btn-sm"
+                className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center gap-2"
                 onClick={() => handleDemoLogin('OPERATIONS_MANAGER')}
               >
-                📋 Operations Manager (Default)
+                <UserCheck size={14} /> Operations Manager (Default)
               </button>
               <button
                 type="button"
-                className="btn btn-outline-dark btn-sm"
+                className="btn btn-outline-dark btn-sm d-flex align-items-center justify-content-center gap-2"
                 onClick={() => handleDemoLogin('ADMIN')}
               >
-                👑 Admin Director
+                <UserCog size={14} /> System Administrator
               </button>
               <button
                 type="button"
-                className="btn btn-outline-secondary btn-sm"
+                className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center gap-2"
                 onClick={() => handleDemoLogin('POD_LEAD')}
               >
-                🛡️ Alpha Pod Lead
+                <Shield size={14} /> Alpha Pod Lead
               </button>
             </div>
           </div>

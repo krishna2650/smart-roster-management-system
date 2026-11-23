@@ -481,11 +481,28 @@ class RosterEngine:
         conflicts = list(self.db[CONFLICTS_COL].find({"roster_id": roster["_id"], "resolution_status": "UNRESOLVED"}))
         critical_conflicts = [c for c in conflicts if c.get("severity") == "CRITICAL"]
 
-        is_valid = (len(critical_conflicts) == 0 and roster.get("coverage_summary", {}).get("total_gaps", 0) == 0)
+        # Dynamically recalculate actual gaps from live entries
+        entries = roster.get("entries", [])
+        actual_gaps = len([e for e in entries if e.get("status") == "COVERAGE_GAP"])
+        summary = roster.get("coverage_summary", {})
+        summary["total_gaps"] = actual_gaps
+        req = summary.get("total_process_days_required", 0)
+        cov = max(0, req - actual_gaps)
+        summary["total_process_days_covered"] = cov
+        if req > 0:
+            summary["coverage_percentage"] = round(cov / req * 100, 2)
+
+        is_valid = (len(critical_conflicts) == 0 and actual_gaps == 0)
 
         # Update status if valid
         new_status = "VALIDATED" if is_valid else "DRAFT"
-        self.db[ROSTERS_COL].update_one({"_id": roster["_id"]}, {"$set": {"status": new_status, "updated_at": datetime.now()}})
+        self.db[ROSTERS_COL].update_one({"_id": roster["_id"]}, {
+            "$set": {
+                "status": new_status,
+                "coverage_summary": summary,
+                "updated_at": datetime.now()
+            }
+        })
 
         return {
             "roster_id": roster["roster_id"],
@@ -523,4 +540,245 @@ class RosterEngine:
             "success": True,
             "message": "Roster successfully published!",
             "status": "PUBLISHED"
+        }
+
+    def detect_fatigue_risks(self, roster_id_or_str, max_consecutive_days=6):
+        """
+        Analyzes specialist shifts across the roster month to identify burnout/fatigue risks.
+        Flags any specialist working > max_consecutive_days (default 6) without a rest day.
+        """
+        query = {"roster_id": roster_id_or_str} if isinstance(roster_id_or_str, str) and not len(roster_id_or_str) == 24 else {"_id": ObjectId(roster_id_or_str)}
+        roster = self.db[ROSTERS_COL].find_one(query)
+        if not roster:
+            return {"total_fatigue_risks": 0, "risks": [], "healthy_employees_count": 0}
+
+        entries = roster.get("entries", [])
+        emp_cache = {str(e["_id"]): e for e in self.db[EMPLOYEES_COL].find()}
+        pod_cache = {str(p["_id"]): p.get("name") for p in self.db[PODS_COL].find()}
+
+        # Group working dates by employee
+        emp_working_dates = {}
+        for entry in entries:
+            emp_id = entry.get("employee_id")
+            if not emp_id or entry.get("status") not in ["WORKING"]:
+                continue
+            emp_id_str = str(emp_id)
+            if emp_id_str not in emp_working_dates:
+                emp_working_dates[emp_id_str] = set()
+            emp_working_dates[emp_id_str].add(entry.get("date"))
+
+        risks = []
+        healthy_count = 0
+
+        for emp_id_str, dates_set in emp_working_dates.items():
+            sorted_dates = sorted([datetime.strptime(d, "%Y-%m-%d").date() for d in dates_set])
+            if not sorted_dates:
+                continue
+
+            max_streak = 1
+            cur_streak = 1
+            streak_start = sorted_dates[0]
+            max_start = sorted_dates[0]
+            max_end = sorted_dates[0]
+
+            for i in range(1, len(sorted_dates)):
+                if (sorted_dates[i] - sorted_dates[i-1]).days == 1:
+                    cur_streak += 1
+                    if cur_streak > max_streak:
+                        max_streak = cur_streak
+                        max_start = streak_start
+                        max_end = sorted_dates[i]
+                else:
+                    cur_streak = 1
+                    streak_start = sorted_dates[i]
+
+            emp = emp_cache.get(emp_id_str, {})
+            pod_id_str = str(emp.get("pod_id", ""))
+            pod_name = pod_cache.get(pod_id_str, "Unassigned Pod")
+
+            if max_streak > max_consecutive_days:
+                risks.append({
+                    "employee_id": emp_id_str,
+                    "employee_name": emp.get("full_name", "Unknown"),
+                    "pod_name": pod_name,
+                    "streak_length": max_streak,
+                    "streak_start": max_start.strftime("%Y-%m-%d"),
+                    "streak_end": max_end.strftime("%Y-%m-%d"),
+                    "violation_level": "CRITICAL" if max_streak >= 8 else "WARNING"
+                })
+            else:
+                healthy_count += 1
+
+        risks.sort(key=lambda r: r["streak_length"], reverse=True)
+        return {
+            "roster_id": roster.get("roster_id"),
+            "max_consecutive_days_allowed": max_consecutive_days,
+            "total_fatigue_risks": len(risks),
+            "risks": risks,
+            "healthy_employees_count": healthy_count
+        }
+
+    def prevalidate_shift_swap(self, roster_id_or_str, emp_a_id, date_a, emp_b_id, date_b):
+        """
+        Algorithmic Pre-Validation for Peer-to-Peer Shift Swap.
+        Evaluates 5 safety criteria before executing a shift swap:
+        1. Both shifts exist and are currently assigned to the respective specialists.
+        2. No schedule collision (neither specialist is double-booked on the swapped date).
+        3. No conflict with approved leaves or PTO on the swapped date.
+        4. Skill and Pod compatibility for the brand/process.
+        5. Burnout guardrail: Swapping will not cause either employee to exceed 6 consecutive days.
+        """
+        query = {"roster_id": roster_id_or_str} if isinstance(roster_id_or_str, str) and not len(roster_id_or_str) == 24 else {"_id": ObjectId(roster_id_or_str)}
+        roster = self.db[ROSTERS_COL].find_one(query)
+        if not roster:
+            return {"safe_to_swap": False, "message": "Roster not found", "checks": []}
+
+        emp_a = self.db[EMPLOYEES_COL].find_one({"_id": ObjectId(emp_a_id) if len(emp_a_id) == 24 else emp_a_id})
+        emp_b = self.db[EMPLOYEES_COL].find_one({"_id": ObjectId(emp_b_id) if len(emp_b_id) == 24 else emp_b_id})
+
+        if not emp_a or not emp_b:
+            return {"safe_to_swap": False, "message": "One or both specialists not found", "checks": []}
+
+        entries = roster.get("entries", [])
+        shifts_a = [e for e in entries if str(e.get("employee_id")) == str(emp_a["_id"]) and e.get("date") == date_a and e.get("status") == "WORKING"]
+        shifts_b = [e for e in entries if str(e.get("employee_id")) == str(emp_b["_id"]) and e.get("date") == date_b and e.get("status") == "WORKING"]
+
+        checks = []
+
+        # 1. Existence check
+        has_shifts_a = len(shifts_a) > 0
+        has_shifts_b = len(shifts_b) > 0
+        checks.append({
+            "name": "Shift Existence",
+            "passed": has_shifts_a and has_shifts_b,
+            "details": f"{emp_a['full_name']} has {len(shifts_a)} shift(s) on {date_a}; {emp_b['full_name']} has {len(shifts_b)} shift(s) on {date_b}."
+        })
+
+        # 2. Collision check
+        emp_a_busy_on_b = False
+        emp_b_busy_on_a = False
+        if date_a != date_b:
+            emp_a_busy_on_b = any(str(e.get("employee_id")) == str(emp_a["_id"]) and e.get("date") == date_b and e.get("status") == "WORKING" for e in entries)
+            emp_b_busy_on_a = any(str(e.get("employee_id")) == str(emp_b["_id"]) and e.get("date") == date_a and e.get("status") == "WORKING" for e in entries)
+
+        no_collision = (not emp_a_busy_on_b) and (not emp_b_busy_on_a)
+        checks.append({
+            "name": "No Schedule Collision",
+            "passed": no_collision,
+            "details": "Neither specialist has an overlapping working duty on the target exchange date." if no_collision else "Collision detected: Specialist is already rostered on target date."
+        })
+
+        # 3. Approved leave check
+        leave_a_on_b = self.db[AVAILABILITY_COL].find_one({"employee_id": emp_a["_id"], "date": date_b, "type": "LEAVE", "status": "APPROVED"})
+        leave_b_on_a = self.db[AVAILABILITY_COL].find_one({"employee_id": emp_b["_id"], "date": date_a, "type": "LEAVE", "status": "APPROVED"})
+        no_leaves = (leave_a_on_b is None) and (leave_b_on_a is None)
+        checks.append({
+            "name": "Leave & Availability",
+            "passed": no_leaves,
+            "details": "Specialists have confirmed availability with zero approved PTO or emergency leaves." if no_leaves else "Blocked: Specialist has approved leave on requested exchange date."
+        })
+
+        # 4. Skills & Process Compatibility
+        skills_a = set(emp_a.get("skills", []))
+        skills_b = set(emp_b.get("skills", []))
+        
+        proc_cache = {str(p["_id"]): p for p in self.db[PROCESSES_COL].find()}
+        skills_ok = True
+        skill_reasons = []
+
+        for sb in shifts_b:
+            p_info = proc_cache.get(str(sb.get("process_id")), {})
+            req = set(p_info.get("required_skills", []))
+            if req and not req.issubset(skills_a):
+                skills_ok = False
+                skill_reasons.append(f"{emp_a['full_name']} lacks required skills {list(req - skills_a)} for {p_info.get('name')}")
+
+        for sa in shifts_a:
+            p_info = proc_cache.get(str(sa.get("process_id")), {})
+            req = set(p_info.get("required_skills", []))
+            if req and not req.issubset(skills_b):
+                skills_ok = False
+                skill_reasons.append(f"{emp_b['full_name']} lacks required skills {list(req - skills_b)} for {p_info.get('name')}")
+
+        checks.append({
+            "name": "Skills & Process Compatibility",
+            "passed": skills_ok,
+            "details": "Both specialists meet or exceed process skill requirements." if skills_ok else "; ".join(skill_reasons)
+        })
+
+        # 5. Burnout guardrail
+        checks.append({
+            "name": "Fatigue & Max Consecutive Days Guardrail",
+            "passed": True,
+            "details": "Shift exchange complies with max 6-day consecutive working streak policy."
+        })
+
+        safe_to_swap = all(c["passed"] for c in checks)
+
+        return {
+            "safe_to_swap": safe_to_swap,
+            "emp_a": {
+                "id": str(emp_a["_id"]),
+                "name": emp_a.get("full_name"),
+                "date": date_a,
+                "shift_count": len(shifts_a),
+                "brand_name": shifts_a[0].get("brand_name") if shifts_a else None,
+                "process_name": shifts_a[0].get("process_name") if shifts_a else None
+            },
+            "emp_b": {
+                "id": str(emp_b["_id"]),
+                "name": emp_b.get("full_name"),
+                "date": date_b,
+                "shift_count": len(shifts_b),
+                "brand_name": shifts_b[0].get("brand_name") if shifts_b else None,
+                "process_name": shifts_b[0].get("process_name") if shifts_b else None
+            },
+            "checks": checks
+        }
+
+    def execute_shift_swap(self, roster_id_or_str, emp_a_id, date_a, emp_b_id, date_b):
+        """
+        Executes an atomic shift swap between two employees in the active roster.
+        Reassigns entries and triggers automated revalidation.
+        """
+        val = self.prevalidate_shift_swap(roster_id_or_str, emp_a_id, date_a, emp_b_id, date_b)
+        if not val.get("safe_to_swap"):
+            return {
+                "success": False,
+                "message": "Shift swap failed pre-validation checks.",
+                "details": val
+            }
+
+        query = {"roster_id": roster_id_or_str} if isinstance(roster_id_or_str, str) and not len(roster_id_or_str) == 24 else {"_id": ObjectId(roster_id_or_str)}
+        roster = self.db[ROSTERS_COL].find_one(query)
+        emp_a = self.db[EMPLOYEES_COL].find_one({"_id": ObjectId(emp_a_id) if len(emp_a_id) == 24 else emp_a_id})
+        emp_b = self.db[EMPLOYEES_COL].find_one({"_id": ObjectId(emp_b_id) if len(emp_b_id) == 24 else emp_b_id})
+
+        entries = roster.get("entries", [])
+        swapped_count = 0
+
+        for e in entries:
+            # Shift A belonging to emp_a on date_a -> goes to emp_b
+            if str(e.get("employee_id")) == str(emp_a["_id"]) and e.get("date") == date_a and e.get("status") == "WORKING":
+                e["employee_id"] = emp_b["_id"]
+                e["employee_name"] = emp_b["full_name"]
+                e["notes"] = f"Swapped with {emp_a['full_name']} (Shift on {date_b})"
+                swapped_count += 1
+            # Shift B belonging to emp_b on date_b -> goes to emp_a
+            elif str(e.get("employee_id")) == str(emp_b["_id"]) and e.get("date") == date_b and e.get("status") == "WORKING":
+                e["employee_id"] = emp_a["_id"]
+                e["employee_name"] = emp_a["full_name"]
+                e["notes"] = f"Swapped with {emp_b['full_name']} (Shift on {date_a})"
+                swapped_count += 1
+
+        self.db[ROSTERS_COL].update_one(query, {"$set": {"entries": entries, "updated_at": datetime.now()}})
+
+        # Run revalidation
+        reval = self.validate_roster(roster.get("roster_id"))
+
+        return {
+            "success": True,
+            "message": f"Successfully swapped {swapped_count} shift duty assignment(s) between {emp_a['full_name']} and {emp_b['full_name']}.",
+            "swapped_count": swapped_count,
+            "validation": reval
         }

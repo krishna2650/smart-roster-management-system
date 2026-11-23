@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, User, Key, Check } from 'lucide-react';
+import { ShieldCheck, User, Key, Check, UserCog, UserCheck, Shield } from 'lucide-react';
 
 const Settings = () => {
   const { user, loginAsDemo } = useAuth();
@@ -69,7 +69,9 @@ const Settings = () => {
           <div className="col-md-4">
             <div className="p-3 border rounded bg-white h-100 d-flex flex-column justify-content-between">
               <div>
-                <h6 className="fw-bold mb-1">👑 Admin</h6>
+                <h6 className="fw-bold mb-1 d-flex align-items-center gap-2">
+                  <UserCog size={16} className="text-primary" /> Admin
+                </h6>
                 <p className="text-muted" style={{ fontSize: '0.75rem' }}>
                   Full application access, pod management, cross-pod reassignments, system settings.
                 </p>
@@ -89,7 +91,9 @@ const Settings = () => {
           <div className="col-md-4">
             <div className="p-3 border rounded bg-white h-100 d-flex flex-column justify-content-between">
               <div>
-                <h6 className="fw-bold mb-1">📋 Operations Manager</h6>
+                <h6 className="fw-bold mb-1 d-flex align-items-center gap-2">
+                  <UserCheck size={16} className="text-primary" /> Operations Manager
+                </h6>
                 <p className="text-muted" style={{ fontSize: '0.75rem' }}>
                   Monthly roster generation, leave approvals, conflict resolutions, publishing rosters.
                 </p>
@@ -110,7 +114,9 @@ const Settings = () => {
           <div className="col-md-4">
             <div className="p-3 border rounded bg-white h-100 d-flex flex-column justify-content-between">
               <div>
-                <h6 className="fw-bold mb-1">🛡️ Alpha Pod Lead</h6>
+                <h6 className="fw-bold mb-1 d-flex align-items-center gap-2">
+                  <Shield size={16} className="text-primary" /> Alpha Pod Lead
+                </h6>
                 <p className="text-muted" style={{ fontSize: '0.75rem' }}>
                   Oversees Alpha Pod (Priya Sharma), team availability, brand coverage adherence.
                 </p>

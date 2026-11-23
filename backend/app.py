@@ -16,6 +16,7 @@ from routes.roster import roster_bp
 from routes.conflicts import conflicts_bp
 from routes.dashboard import dashboard_bp
 from routes.reports import reports_bp
+from routes.chat import chat_bp
 from models.schemas import EMPLOYEES_COL
 from seeds.seed_data import seed_database
 
@@ -50,6 +51,7 @@ def create_app():
     app.register_blueprint(conflicts_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(chat_bp)
 
     @app.route("/api/health", methods=["GET"])
     def health_check():

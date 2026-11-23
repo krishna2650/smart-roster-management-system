@@ -15,7 +15,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
   margin: 0;
@@ -83,15 +83,15 @@ body {
 }
 
 .sidebar-brand-icon {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  background: #1e40af;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .sidebar-nav {
@@ -152,31 +152,30 @@ body {
 .stat-card {
   background: #ffffff;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.15s ease;
 }
 
 .stat-card:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-  transform: translateY(-2px);
+  border-color: #cbd5e1;
 }
 
 .dashboard-card {
   background: #ffffff;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  margin-bottom: 1.25rem;
 }
 
 /* Roster Calendar Matrix */
 .roster-table-container {
   overflow-x: auto;
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: 6px;
   background: #ffffff;
   max-height: 650px;
 }
@@ -185,25 +184,26 @@ body {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 .roster-table th,
 .roster-table td {
   padding: 6px 8px;
-  border-right: 1px solid #f1f5f9;
-  border-bottom: 1px solid #f1f5f9;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
   text-align: center;
   vertical-align: middle;
 }
 
 .roster-table th {
   background-color: #f8fafc;
-  color: #475569;
+  color: #334155;
   font-weight: 600;
   position: sticky;
   top: 0;
   z-index: 10;
+  border-bottom: 2px solid #cbd5e1;
 }
 
 .roster-table th.sticky-col,
@@ -213,8 +213,8 @@ body {
   background-color: #ffffff;
   z-index: 11;
   text-align: left;
-  min-width: 180px;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.03);
+  min-width: 190px;
+  box-shadow: 1px 0 0 #e2e8f0;
 }
 
 .roster-table th.sticky-col {
@@ -222,98 +222,98 @@ body {
   background-color: #f8fafc;
 }
 
-/* Status Badges */
+/* Status Badges - Clean Monospaced Enterprise Tags */
 .badge-status {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 6px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  border-radius: 4px;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 3px;
   cursor: pointer;
   white-space: nowrap;
   letter-spacing: 0.02em;
+  transition: opacity 0.15s ease;
+}
+
+.badge-status:hover {
+  opacity: 0.85;
 }
 
 .badge-working {
-  background-color: #dbeafe;
-  color: #1e40af;
+  background-color: #eff6ff;
+  color: #1d4ed8;
   border: 1px solid #bfdbfe;
 }
 
 .badge-weekly-off {
-  background-color: #f1f5f9;
-  color: #475569;
+  background-color: #f8fafc;
+  color: #64748b;
   border: 1px solid #e2e8f0;
 }
 
 .badge-leave {
-  background-color: #fef3c7;
+  background-color: #fffbeb;
   color: #b45309;
   border: 1px solid #fde68a;
 }
 
 .badge-comp-off {
-  background-color: #f3e8ff;
-  color: #6b21a8;
+  background-color: #faf5ff;
+  color: #7e22ce;
   border: 1px solid #e9d5ff;
 }
 
 .badge-public-holiday {
-  background-color: #e0e7ff;
-  color: #3730a3;
+  background-color: #eef2ff;
+  color: #4338ca;
   border: 1px solid #c7d2fe;
 }
 
 .badge-not-required {
-  background-color: #f8fafc;
+  background-color: #ffffff;
   color: #94a3b8;
   border: 1px dashed #cbd5e1;
 }
 
 .badge-coverage-gap {
-  background-color: #fee2e2;
+  background-color: #fef2f2;
   color: #b91c1c;
-  border: 1px solid #fca5a5;
-  animation: pulse-gap 2s infinite ease-in-out;
-}
-
-@keyframes pulse-gap {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
-  }
+  border: 1px solid #f87171;
+  font-weight: 800;
 }
 
 /* Conflict Card */
 .conflict-card {
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.875rem;
   background: #ffffff;
-  border-left: 5px solid #cbd5e1;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid #94a3b8;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
 .conflict-card.critical {
-  border-left-color: #ef4444;
-  background: #fffcfc;
+  border-left-color: #dc2626;
+  background: #ffffff;
 }
 
 .conflict-card.high {
-  border-left-color: #f97316;
-  background: #fffaf5;
+  border-left-color: #ea580c;
+  background: #ffffff;
 }
 
 .conflict-card.medium {
-  border-left-color: #eab308;
+  border-left-color: #d97706;
 }
 
 .conflict-card.low {
-  border-left-color: #3b82f6;
+  border-left-color: #2563eb;
 }
 
 /* Buttons */

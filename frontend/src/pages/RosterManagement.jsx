@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import {
   CalendarRange, Play, RefreshCw, CheckCircle, AlertTriangle,
-  Upload, Download, Filter, Eye, Edit2, ShieldAlert, Check, X
+  Upload, Download, Filter, Eye, Edit2, ShieldAlert, Check, X,
+  Building2, Layers, GitBranch, User, Calendar, ArrowLeftRight,
+  ShieldCheck, Zap
 } from 'lucide-react';
 import { StatusBadge } from '../components/Common/Badge';
 
@@ -22,6 +24,19 @@ const RosterManagement = () => {
   const [selectedPodFilter, setSelectedPodFilter] = useState('');
   const [selectedBrandFilter, setSelectedBrandFilter] = useState('');
   const [selectedEmpFilter, setSelectedEmpFilter] = useState('');
+
+  // Fatigue & Burnout guardrail state
+  const [fatigueData, setFatigueData] = useState(null);
+  const [showFatigueModal, setShowFatigueModal] = useState(false);
+
+  // Shift Swap Marketplace state
+  const [showSwapModal, setShowSwapModal] = useState(false);
+  const [swapEmpA, setSwapEmpA] = useState('');
+  const [swapDateA, setSwapDateA] = useState('');
+  const [swapEmpB, setSwapEmpB] = useState('');
+  const [swapDateB, setSwapDateB] = useState('');
+  const [swapValidation, setSwapValidation] = useState(null);
+  const [swapLoading, setSwapLoading] = useState(false);
 
   // Cell edit modal
   const [editingCell, setEditingCell] = useState(null);
@@ -43,9 +58,18 @@ const RosterManagement = () => {
 
       const res = await api.get(`/rosters/${rosterId}?${queryParams}`);
       setRosterData(res.data.roster);
+
+      // Also fetch fatigue guardrail metrics
+      try {
+        const fatRes = await api.get(`/rosters/${rosterId}/fatigue`);
+        setFatigueData(fatRes.data);
+      } catch (fatErr) {
+        console.error("Fatigue fetch err", fatErr);
+      }
     } catch (err) {
       if (err.response?.status === 404) {
         setRosterData(null);
+        setFatigueData(null);
       } else {
         console.error(err);
       }
@@ -140,6 +164,59 @@ const RosterManagement = () => {
       });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleOpenSwapModal = () => {
+    setShowSwapModal(true);
+    setSwapValidation(null);
+    const defaultDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+    setSwapDateA(defaultDate);
+    setSwapDateB(defaultDate);
+    if (employees.length >= 2) {
+      if (!swapEmpA) setSwapEmpA(employees[0]._id);
+      if (!swapEmpB) setSwapEmpB(employees[1]._id);
+    }
+  };
+
+  const handlePrevalidateSwap = async () => {
+    if (!swapEmpA || !swapDateA || !swapEmpB || !swapDateB || !rosterData) return;
+    try {
+      setSwapLoading(true);
+      const res = await api.post(`/rosters/${rosterData.roster_id}/swap/prevalidate`, {
+        emp_a_id: swapEmpA,
+        date_a: swapDateA,
+        emp_b_id: swapEmpB,
+        date_b: swapDateB
+      });
+      setSwapValidation(res.data);
+    } catch (err) {
+      setFeedback({ type: 'danger', message: "Pre-validation error: " + (err.response?.data?.error || err.message) });
+    } finally {
+      setSwapLoading(false);
+    }
+  };
+
+  const handleExecuteSwap = async () => {
+    if (!swapValidation?.safe_to_swap || !rosterData) return;
+    try {
+      setSwapLoading(true);
+      const res = await api.post(`/rosters/${rosterData.roster_id}/swap/execute`, {
+        emp_a_id: swapEmpA,
+        date_a: swapDateA,
+        emp_b_id: swapEmpB,
+        date_b: swapDateB
+      });
+      setShowSwapModal(false);
+      setFeedback({
+        type: 'success',
+        message: res.data.message || "Shift swap executed atomically and roster revalidated!"
+      });
+      await fetchRoster();
+    } catch (err) {
+      setFeedback({ type: 'danger', message: "Execution error: " + (err.response?.data?.error || err.message) });
+    } finally {
+      setSwapLoading(false);
     }
   };
 
@@ -519,6 +596,15 @@ const RosterManagement = () => {
           </button>
 
           <button
+            className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1"
+            onClick={handleOpenSwapModal}
+            disabled={actionLoading || !rosterData}
+            title="Peer-to-Peer Shift Swap Marketplace"
+          >
+            <ArrowLeftRight size={13} /> Swap Shifts
+          </button>
+
+          <button
             className={`btn btn-sm d-flex align-items-center gap-1 ${
               rosterData?.status === 'PUBLISHED' ? 'btn-success' : 'btn-dark'
             }`}
@@ -563,6 +649,24 @@ const RosterManagement = () => {
                   ({rosterData.coverage_summary?.total_process_days_covered} of {rosterData.coverage_summary?.total_process_days_required} required shifts)
                 </span>
               </div>
+              <div className="vr"></div>
+              <div className="d-flex align-items-center gap-2">
+                <span className="text-muted" style={{ fontSize: '0.78rem' }}>Fatigue Guardrail:</span>
+                {fatigueData && fatigueData.total_fatigue_risks > 0 ? (
+                  <button
+                    className="badge bg-danger-subtle text-danger border border-danger-subtle d-flex align-items-center gap-1 px-2 py-1"
+                    onClick={() => setShowFatigueModal(true)}
+                    style={{ fontSize: '0.75rem', cursor: 'pointer', background: '#fee2e2' }}
+                    title="Click to view burnout alerts"
+                  >
+                    <AlertTriangle size={12} /> {fatigueData.total_fatigue_risks} Fatigue Alert{fatigueData.total_fatigue_risks > 1 ? 's' : ''} (&gt;6d)
+                  </button>
+                ) : (
+                  <span className="badge bg-success-subtle text-success border border-success-subtle d-flex align-items-center gap-1 px-2 py-1" style={{ fontSize: '0.75rem', background: '#dcfce7' }}>
+                    <ShieldCheck size={12} /> 100% Compliant (&le;6d)
+                  </span>
+                )}
+              </div>
             </div>
 
             {rosterData.coverage_summary?.total_gaps > 0 && (
@@ -584,35 +688,35 @@ const RosterManagement = () => {
             className={`btn ${viewMode === 'company' ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() => setViewMode('company')}
           >
-            🏢 Company-wide View
+            <Building2 size={13} className="me-1" /> Company View
           </button>
           <button
             type="button"
             className={`btn ${viewMode === 'pod' ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() => setViewMode('pod')}
           >
-            🛡️ Pod-wise View
+            <Layers size={13} className="me-1" /> Pod View
           </button>
           <button
             type="button"
             className={`btn ${viewMode === 'brand' ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() => setViewMode('brand')}
           >
-            🏷️ Brand-wise View
+            <Building2 size={13} className="me-1" /> Brand View
           </button>
           <button
             type="button"
             className={`btn ${viewMode === 'process' ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() => setViewMode('process')}
           >
-            ⚙️ Process-wise View
+            <GitBranch size={13} className="me-1" /> Process View
           </button>
           <button
             type="button"
             className={`btn ${viewMode === 'employee' ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() => setViewMode('employee')}
           >
-            👤 Employee-wise View
+            <User size={13} className="me-1" /> Employee View
           </button>
         </div>
 
@@ -658,7 +762,7 @@ const RosterManagement = () => {
           <span className="d-flex align-items-center gap-1"><span className="badge-status badge-comp-off">CO</span> Comp-Off</span>
           <span className="d-flex align-items-center gap-1"><span className="badge-status badge-public-holiday">PH</span> Public Holiday</span>
           <span className="d-flex align-items-center gap-1"><span className="badge-status badge-not-required">—</span> Not Required</span>
-          <span className="d-flex align-items-center gap-1"><span className="badge-status badge-coverage-gap">GAP!</span> Mandatory Coverage Gap</span>
+          <span className="d-flex align-items-center gap-1"><span className="badge-status badge-coverage-gap">GAP</span> Coverage Gap</span>
           <span className="text-muted ms-auto fst-italic">Click any cell to edit allocation and revalidate.</span>
         </div>
       </div>
@@ -739,6 +843,271 @@ const RosterManagement = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Shift Swap Marketplace Modal */}
+      {showSwapModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)' }} tabIndex="-1">
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header border-bottom">
+                <div className="d-flex align-items-center gap-2">
+                  <div className="p-2 rounded bg-primary-subtle text-primary">
+                    <ArrowLeftRight size={18} />
+                  </div>
+                  <div>
+                    <h5 className="modal-title mb-0" style={{ fontSize: '1.05rem', fontWeight: 700 }}>
+                      Peer-to-Peer Shift Swap Marketplace
+                    </h5>
+                    <span className="text-muted" style={{ fontSize: '0.78rem' }}>
+                      Algorithmic pre-validation enforcing skills, operating calendars, approved leaves, and fatigue guardrails.
+                    </span>
+                  </div>
+                </div>
+                <button type="button" className="btn-close" onClick={() => setShowSwapModal(false)}></button>
+              </div>
+
+              <div className="modal-body p-4" style={{ fontSize: '0.85rem' }}>
+                <div className="row g-3 mb-4">
+                  {/* Side A: Specialist 1 */}
+                  <div className="col-md-6">
+                    <div className="p-3 rounded border bg-light">
+                      <div className="d-flex align-items-center gap-2 mb-2 text-primary fw-bold">
+                        <User size={15} /> Specialist A (Initiator)
+                      </div>
+                      <div className="mb-2">
+                        <label className="form-label text-muted small mb-1">Select Specialist</label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={swapEmpA}
+                          onChange={e => { setSwapEmpA(e.target.value); setSwapValidation(null); }}
+                        >
+                          {employees.map(emp => (
+                            <option key={emp._id} value={emp._id}>{emp.full_name} ({emp.employee_id})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="form-label text-muted small mb-1">Shift Date to Trade</label>
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          value={swapDateA}
+                          onChange={e => { setSwapDateA(e.target.value); setSwapValidation(null); }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Side B: Specialist 2 */}
+                  <div className="col-md-6">
+                    <div className="p-3 rounded border bg-light">
+                      <div className="d-flex align-items-center gap-2 mb-2 text-primary fw-bold">
+                        <User size={15} /> Specialist B (Counterpart)
+                      </div>
+                      <div className="mb-2">
+                        <label className="form-label text-muted small mb-1">Select Specialist</label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={swapEmpB}
+                          onChange={e => { setSwapEmpB(e.target.value); setSwapValidation(null); }}
+                        >
+                          {employees.map(emp => (
+                            <option key={emp._id} value={emp._id}>{emp.full_name} ({emp.employee_id})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="form-label text-muted small mb-1">Target Shift Date</label>
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          value={swapDateB}
+                          onChange={e => { setSwapDateB(e.target.value); setSwapValidation(null); }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Prevalidation Button */}
+                <div className="d-flex justify-content-center mb-3">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm px-4 d-flex align-items-center gap-2"
+                    onClick={handlePrevalidateSwap}
+                    disabled={swapLoading || !swapEmpA || !swapEmpB}
+                  >
+                    {swapLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm" role="status"></span>
+                        Running Algorithmic Pre-Validation...
+                      </>
+                    ) : (
+                      <>
+                        <Zap size={14} /> Run Algorithmic Pre-Validation
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Prevalidation Results */}
+                {swapValidation && (
+                  <div className="border rounded p-3 mb-3 bg-white">
+                    <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                      <span className="fw-bold">Validation Guardrails Checklist</span>
+                      {swapValidation.safe_to_swap ? (
+                        <span className="badge bg-success-subtle text-success border border-success-subtle d-flex align-items-center gap-1">
+                          <CheckCircle size={13} /> SAFE TO EXECUTE
+                        </span>
+                      ) : (
+                        <span className="badge bg-danger-subtle text-danger border border-danger-subtle d-flex align-items-center gap-1">
+                          <AlertTriangle size={13} /> BLOCKED BY GUARDRAIL
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="d-flex flex-column gap-2 mb-3">
+                      {swapValidation.checks?.map((chk, idx) => (
+                        <div key={idx} className="d-flex align-items-start gap-2">
+                          {chk.passed ? (
+                            <CheckCircle size={16} className="text-success mt-1 flex-shrink-0" />
+                          ) : (
+                            <X size={16} className="text-danger mt-1 flex-shrink-0" />
+                          )}
+                          <div>
+                            <div className={`fw-semibold ${chk.passed ? 'text-dark' : 'text-danger'}`}>
+                              {chk.name}
+                            </div>
+                            <div className="text-muted" style={{ fontSize: '0.78rem' }}>
+                              {chk.details}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {swapValidation.safe_to_swap && (
+                      <div className="alert alert-success d-flex align-items-center gap-2 py-2 mb-0" style={{ fontSize: '0.82rem' }}>
+                        <ShieldCheck size={16} className="text-success flex-shrink-0" />
+                        <div>
+                          Both specialists meet all eligibility, schedule compatibility, skill, and fatigue requirements. Shifts can be safely exchanged without causing critical coverage gaps.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer border-top bg-light">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowSwapModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-success btn-sm d-flex align-items-center gap-1 px-3"
+                  onClick={handleExecuteSwap}
+                  disabled={swapLoading || !swapValidation?.safe_to_swap}
+                >
+                  <ArrowLeftRight size={13} /> Approve & Execute Swap
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fatigue & Burnout Details Modal */}
+      {showFatigueModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)' }} tabIndex="-1">
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header border-bottom">
+                <div className="d-flex align-items-center gap-2">
+                  <div className="p-2 rounded bg-danger-subtle text-danger">
+                    <AlertTriangle size={18} />
+                  </div>
+                  <div>
+                    <h5 className="modal-title mb-0" style={{ fontSize: '1.05rem', fontWeight: 700 }}>
+                      Fatigue & Burnout Guardrail Monitoring
+                    </h5>
+                    <span className="text-muted" style={{ fontSize: '0.78rem' }}>
+                      Enforcing max 6 consecutive working days without rest. Specialists exceeding streak limit are flagged below.
+                    </span>
+                  </div>
+                </div>
+                <button type="button" className="btn-close" onClick={() => setShowFatigueModal(false)}></button>
+              </div>
+
+              <div className="modal-body p-3" style={{ fontSize: '0.85rem' }}>
+                <div className="d-flex justify-content-between align-items-center p-2 mb-3 rounded bg-light border">
+                  <div>
+                    <span className="text-muted">Maximum Allowed Streak:</span>
+                    <strong className="ms-1">6 Consecutive Days</strong>
+                  </div>
+                  <div>
+                    <span className="text-muted">Burnout Risk Specialists:</span>
+                    <strong className="ms-1 text-danger">{fatigueData?.total_fatigue_risks || 0}</strong>
+                  </div>
+                  <div>
+                    <span className="text-muted">Compliant Specialists:</span>
+                    <strong className="ms-1 text-success">{fatigueData?.healthy_employees_count || 0}</strong>
+                  </div>
+                </div>
+
+                {fatigueData?.risks?.length === 0 ? (
+                  <div className="alert alert-success py-3 text-center mb-0">
+                    <ShieldCheck size={24} className="text-success mb-2" />
+                    <div className="fw-bold">Zero Fatigue Violations Detected!</div>
+                    <div className="text-muted small">All active specialists have at least one weekly rest day scheduled every 6 days.</div>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-sm table-hover align-middle border mb-0">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Specialist Name</th>
+                          <th>Pod</th>
+                          <th>Consecutive Streak</th>
+                          <th>Streak Period</th>
+                          <th>Risk Severity</th>
+                          <th>Recommended Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {fatigueData?.risks?.map((r, i) => (
+                          <tr key={i}>
+                            <td className="fw-semibold text-dark">{r.employee_name}</td>
+                            <td><span className="badge bg-light text-dark border">{r.pod_name}</span></td>
+                            <td>
+                              <span className="fw-bold text-danger">{r.streak_length} days</span>
+                            </td>
+                            <td className="font-monospace small text-muted">
+                              {r.streak_start} → {r.streak_end}
+                            </td>
+                            <td>
+                              <span className={`badge ${r.violation_level === 'CRITICAL' ? 'bg-danger' : 'bg-warning text-dark'}`}>
+                                {r.violation_level}
+                              </span>
+                            </td>
+                            <td className="small text-muted">
+                              Schedule weekly off or initiate shift swap.
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer border-top bg-light">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowFatigueModal(false)}>
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
