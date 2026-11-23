@@ -20,7 +20,7 @@ def get_holidays():
 @holidays_bp.route("", methods=["POST"])
 def create_holiday():
     db = get_db()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     name = data.get("name", "").strip()
     h_date = data.get("date", "").strip()
 
@@ -51,7 +51,7 @@ def update_holiday(h_id):
     if not h:
         return jsonify({"error": "Holiday not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     update_fields = {}
     for f in ["name", "date", "description", "location", "is_active"]:
         if f in data:

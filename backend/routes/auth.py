@@ -82,7 +82,7 @@ def jwt_required(optional=False):
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     email = data.get("email", "").strip().lower()
     password = data.get("password", "").strip()
 
@@ -113,7 +113,7 @@ def login():
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     email = data.get("email", "").strip().lower()
     password = data.get("password", "").strip()
     full_name = data.get("full_name", "").strip()

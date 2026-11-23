@@ -48,7 +48,7 @@ def get_pod(p_id):
 @pods_bp.route("", methods=["POST"])
 def create_pod():
     db = get_db()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     pod_id = data.get("pod_id", "").strip()
     name = data.get("name", "").strip()
 
@@ -79,7 +79,7 @@ def update_pod(p_id):
     if not pod:
         return jsonify({"error": "Pod not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     update_fields = {}
     if "name" in data:
         update_fields["name"] = data["name"]

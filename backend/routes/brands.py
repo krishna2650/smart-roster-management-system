@@ -46,7 +46,7 @@ def get_brand(b_id):
 @brands_bp.route("", methods=["POST"])
 def create_brand():
     db = get_db()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     errors = validate_brand_payload(data)
     if errors:
         return jsonify({"error": "Validation failed", "details": errors}), 400
@@ -79,7 +79,7 @@ def update_brand(b_id):
     if not brand:
         return jsonify({"error": "Brand not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     update_fields = {}
     for f in ["name", "description", "client_status", "operating_calendar",
               "public_holiday_policy", "minimum_coverage_requirements", "is_active"]:

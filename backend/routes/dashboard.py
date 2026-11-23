@@ -35,7 +35,7 @@ def get_stats():
     roster = db[ROSTERS_COL].find_one({"roster_id": roster_id_str})
     if not roster:
         # Fallback to most recent roster
-        rosters = list(db[ROSTERS_COL].find({}).sort("year", -1))
+        rosters = list(db[ROSTERS_COL].find({}).sort([("year", -1), ("month", -1)]))
         roster = rosters[0] if rosters else None
 
     working_today = 0

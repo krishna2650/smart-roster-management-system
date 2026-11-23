@@ -36,7 +36,12 @@ const RosterManagement = () => {
     try {
       setLoading(true);
       const rosterId = `ROSTER-${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-      const res = await api.get(`/rosters/${rosterId}?view=${viewMode}&pod_id=${selectedPodFilter}&brand_id=${selectedBrandFilter}&employee_id=${selectedEmpFilter}`);
+      let queryParams = `view=${viewMode}`;
+      if (viewMode === 'pod' && selectedPodFilter) queryParams += `&pod_id=${selectedPodFilter}`;
+      if (viewMode === 'brand' && selectedBrandFilter) queryParams += `&brand_id=${selectedBrandFilter}`;
+      if (viewMode === 'employee' && selectedEmpFilter) queryParams += `&employee_id=${selectedEmpFilter}`;
+
+      const res = await api.get(`/rosters/${rosterId}?${queryParams}`);
       setRosterData(res.data.roster);
     } catch (err) {
       if (err.response?.status === 404) {

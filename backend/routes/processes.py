@@ -40,7 +40,7 @@ def get_process(p_id):
 @processes_bp.route("", methods=["POST"])
 def create_process():
     db = get_db()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     errors = validate_process_payload(data)
     if errors:
         return jsonify({"error": "Validation failed", "details": errors}), 400
@@ -78,7 +78,7 @@ def update_process(p_id):
     if not proc:
         return jsonify({"error": "Process not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     update_fields = {}
     for f in ["name", "description", "operating_calendar", "min_employees", "max_staffing", "working_day_rules", "is_active"]:
         if f in data:

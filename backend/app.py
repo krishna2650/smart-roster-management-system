@@ -16,6 +16,8 @@ from routes.roster import roster_bp
 from routes.conflicts import conflicts_bp
 from routes.dashboard import dashboard_bp
 from routes.reports import reports_bp
+from models.schemas import EMPLOYEES_COL
+from seeds.seed_data import seed_database
 
 def create_app():
     app = Flask(__name__)
@@ -23,6 +25,17 @@ def create_app():
 
     # Enable CORS for frontend
     CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+
+    # Automatically ensure database is seeded with benchmark dataset
+    with app.app_context():
+        try:
+            db = get_db()
+            if db[EMPLOYEES_COL].count_documents({}) == 0:
+                print("Database is empty on startup. Auto-seeding benchmark dataset...")
+                seed_database()
+                print("Auto-seeding complete.")
+        except Exception as e:
+            print(f"Auto-seed check note: {e}")
 
     # Register Blueprints
     app.register_blueprint(auth_bp)

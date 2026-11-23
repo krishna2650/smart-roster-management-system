@@ -85,7 +85,7 @@ def resolve_conflict(c_id):
     if not conflict:
         return jsonify({"error": "Conflict not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     notes = data.get("notes", "Resolution verified by operations manager")
 
     db[CONFLICTS_COL].update_one({"_id": conflict["_id"]}, {

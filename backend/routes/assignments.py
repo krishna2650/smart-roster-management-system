@@ -47,7 +47,7 @@ def get_assignments():
 @assignments_bp.route("", methods=["POST"])
 def create_assignment():
     db = get_db()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
 
     emp_id = to_object_id(data.get("employee_id"))
     brand_id = to_object_id(data.get("brand_id"))
@@ -106,7 +106,7 @@ def update_assignment(a_id):
     if not assign:
         return jsonify({"error": "Assignment not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     update_fields = {}
     for f in ["effective_start_date", "effective_end_date", "status", "allocation_percentage", "is_primary"]:
         if f in data:

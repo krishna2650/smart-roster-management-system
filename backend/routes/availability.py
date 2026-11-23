@@ -37,7 +37,7 @@ def get_availability():
 @availability_bp.route("", methods=["POST"])
 def create_availability():
     db = get_db()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
 
     emp_id = to_object_id(data.get("employee_id"))
     emp = db[EMPLOYEES_COL].find_one({"_id": emp_id})
@@ -88,7 +88,7 @@ def approve_leave(rec_id):
     if not rec:
         return jsonify({"error": "Leave record not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     approved_by = to_object_id(data.get("approved_by"))
 
     db[AVAILABILITY_COL].update_one({"_id": target_id}, {

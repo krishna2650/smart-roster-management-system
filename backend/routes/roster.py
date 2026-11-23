@@ -12,7 +12,7 @@ roster_bp = Blueprint("roster", __name__, url_prefix="/api/rosters")
 
 @roster_bp.route("/generate", methods=["POST"])
 def generate():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     now = datetime.now()
     year = int(data.get("year", now.year))
     month = int(data.get("month", now.month))
@@ -84,7 +84,7 @@ def validate(r_id):
 @roster_bp.route("/<r_id>/publish", methods=["POST"])
 def publish(r_id):
     db = get_db()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     published_by = data.get("published_by", "Operations Manager")
     engine = RosterEngine(db)
     result = engine.publish_roster(r_id, published_by=published_by)
@@ -104,7 +104,7 @@ def update_entry(r_id):
     if not roster:
         return jsonify({"error": "Roster not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     target_date = data.get("date")
     target_proc_id = data.get("process_id")
     new_employee_id = to_object_id(data.get("employee_id"))
@@ -167,7 +167,7 @@ def reassign_backup(r_id):
     if not roster:
         return jsonify({"error": "Roster not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     target_date = data.get("date")
     process_id = data.get("process_id")
     backup_employee_id = to_object_id(data.get("employee_id"))
@@ -177,26 +177,27 @@ def reassign_backup(r_id):
         return jsonify({"error": "Backup employee not found"}), 404
 
     entries = roster.get("entries", [])
-    gap_fixed = False
+    gap_fixed_count = 0
     for e in entries:
-        if e.get("date") == target_date and str(e.get("process_id")) == str(process_id) and e.get("status") == "COVERAGE_GAP":
+        matches_proc = (not process_id) or (str(e.get("process_id")) == str(process_id))
+        if e.get("date") == target_date and matches_proc and e.get("status") == "COVERAGE_GAP":
             e["employee_id"] = backup_employee_id
             e["employee_name"] = emp["full_name"]
             e["status"] = "WORKING"
             e["notes"] = f"Relief backup assigned ({emp['full_name']})"
-            gap_fixed = True
-            break
+            gap_fixed_count += 1
+            if process_id:
+                break
 
-    if gap_fixed:
+    if gap_fixed_count > 0:
         # Update roster coverage count
         summary = roster.get("coverage_summary", {})
-        if summary.get("total_gaps", 0) > 0:
-            summary["total_gaps"] -= 1
-            summary["total_process_days_covered"] += 1
-            if summary.get("total_process_days_required", 0) > 0:
-                summary["coverage_percentage"] = round(
-                    summary["total_process_days_covered"] / summary["total_process_days_required"] * 100, 2
-                )
+        summary["total_gaps"] = max(0, summary.get("total_gaps", 0) - gap_fixed_count)
+        summary["total_process_days_covered"] = summary.get("total_process_days_covered", 0) + gap_fixed_count
+        if summary.get("total_process_days_required", 0) > 0:
+            summary["coverage_percentage"] = round(
+                summary["total_process_days_covered"] / summary["total_process_days_required"] * 100, 2
+            )
 
         db[ROSTERS_COL].update_one({"_id": roster["_id"]}, {
             "$set": {

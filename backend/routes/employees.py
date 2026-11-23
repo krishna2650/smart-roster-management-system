@@ -83,7 +83,7 @@ def get_employee_details(emp_id):
 @employees_bp.route("", methods=["POST"])
 def create_employee():
     db = get_db()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     errors = validate_employee_payload(data)
     if errors:
         return jsonify({"error": "Validation failed", "details": errors}), 400
@@ -125,7 +125,7 @@ def update_employee(emp_id):
     if not emp:
         return jsonify({"error": "Employee not found"}), 404
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     update_fields = {}
 
     for field in ["full_name", "phone", "designation", "role", "employment_status",
