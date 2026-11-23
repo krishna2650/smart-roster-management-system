@@ -73,6 +73,7 @@ const Dashboard = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [todayModal, setTodayModal] = useState(null);
   const [lastSyncTime, setLastSyncTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const fetchStats = async (isBackground = false) => {
     try {
@@ -97,6 +98,14 @@ const Dashboard = () => {
       fetchStats(true);
     }, 15000);
     return () => clearInterval(intervalId);
+  }, []);
+
+  // Real-time ticking seconds clock: ticks continuously every 1 second (1, 2, 3...)
+  useEffect(() => {
+    const clockTimer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(clockTimer);
   }, []);
 
   const handleRefresh = async () => {
@@ -161,13 +170,22 @@ const Dashboard = () => {
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
               Enterprise Workforce & Operations Pulse
             </h2>
-            <span className="badge bg-success-subtle text-success border border-success-subtle d-inline-flex align-items-center gap-1 px-2 py-1" style={{ fontSize: '0.72rem', fontWeight: 600 }}>
+            <span
+              className="badge bg-success-subtle text-success border border-success-subtle d-inline-flex align-items-center gap-1.5 px-2.5 py-1"
+              style={{
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                fontVariantNumeric: 'tabular-nums',
+                letterSpacing: '0.01em'
+              }}
+              title={`Live real-time telemetry • Background sync every 15s • Last DB sync: ${lastSyncTime ? lastSyncTime.toLocaleTimeString() : 'Syncing'}`}
+            >
               <span className="live-pulse-dot"></span>
-              LIVE 24/7 {lastSyncTime ? `• ${lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : '• Syncing'}
+              LIVE 24/7 • {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           </div>
           <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>
-            Real-time telemetry across 30+ specialists, dedicated brand managers, and 4 operational pods • <span className="fw-semibold text-dark">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            Real-time telemetry across 30+ specialists, dedicated brand managers, and 4 operational pods • <span className="fw-semibold text-dark">{currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </p>
         </div>
         <div className="d-flex gap-2 mt-2 mt-md-0">
