@@ -525,7 +525,7 @@ const Dashboard = () => {
                   todayModal.type === 'weekly_off' ? (
                     <div>
                       <div className="alert alert-info py-2 px-3 mb-3 border-0 bg-light" style={{ fontSize: '0.8rem' }}>
-                        <strong className="text-primary">Today is Monday (Standard Working Day)</strong>
+                        <strong className="text-primary">Today is {new Date().toLocaleDateString('en-US', { weekday: 'long' })} (Standard Operating Day)</strong>
                         <div className="mt-1 text-muted">
                           In accordance with client operating calendars (Monday–Saturday), all support specialists are actively working today. Weekly rest days are scheduled on Sundays.
                         </div>
