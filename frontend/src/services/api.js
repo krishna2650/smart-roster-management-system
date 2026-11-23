@@ -1,10 +1,28 @@
 import axios from 'axios';
 
+// Dynamically determine backend API base URL
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  // Auto-detect Render deployment domain (e.g. datastraw-roster-frontend -> datastraw-roster-backend)
+  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+    const host = window.location.hostname;
+    const backendHost = host.replace('-frontend', '-backend');
+    if (backendHost !== host) {
+      return `https://${backendHost}/api`;
+    }
+    return 'https://datastraw-roster-backend.onrender.com/api';
+  }
+  return '/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 45000 // Allow up to 45s for Render free instances to spin up from sleep
 });
 
 // Attach JWT token to requests if available
