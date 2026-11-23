@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -24,6 +24,7 @@ import Login from './pages/Login';
 // Layout wrapper for authenticated pages
 const AppLayout = ({ children }) => {
   const { user, loading } = useAuth();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   if (loading) {
     return (
@@ -33,12 +34,14 @@ const AppLayout = ({ children }) => {
     );
   }
 
-  // Allow guest access with default demo account if not logged in
   return (
     <div className="app-container">
-      <Sidebar />
+      <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
+      {mobileSidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
+      )}
       <div className="main-content">
-        <Navbar />
+        <Navbar onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
         <main className="page-body">
           {children}
         </main>

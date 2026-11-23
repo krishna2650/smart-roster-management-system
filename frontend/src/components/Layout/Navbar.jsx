@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Bell, AlertTriangle, User, LogOut, CheckCircle, Calendar, Shield, UserCog, UserCheck } from 'lucide-react';
+import { Bell, AlertTriangle, User, LogOut, CheckCircle, Calendar, Shield, UserCog, UserCheck, Menu } from 'lucide-react';
 import api from '../../services/api';
 
-const Navbar = () => {
+const Navbar = ({ onToggleMobileSidebar }) => {
   const location = useLocation();
   const { user, logout, loginAsDemo } = useAuth();
   const [criticalConflicts, setCriticalConflicts] = useState(0);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Dynamic date tick: auto-updates every 30 seconds so date advances every day at midnight
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Compute page title
   const getPageTitle = (pathname) => {
@@ -48,31 +57,44 @@ const Navbar = () => {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
-  }).format(new Date());
+  }).format(currentDate);
 
   return (
     <header className="top-navbar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <h1 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        {onToggleMobileSidebar && (
+          <button
+            type="button"
+            className="btn btn-sm btn-light border d-lg-none p-1"
+            onClick={onToggleMobileSidebar}
+            aria-label="Toggle navigation drawer"
+          >
+            <Menu size={18} />
+          </button>
+        )}
+        <h1 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: '#0f172a' }} className="text-truncate">
           {getPageTitle(location.pathname)}
         </h1>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-        {/* Date badge */}
-        <div style={{
-          fontSize: '0.8rem',
-          fontWeight: 600,
-          color: '#475569',
-          background: '#f1f5f9',
-          padding: '0.4rem 0.75rem',
-          borderRadius: '6px',
-          border: '1px solid #e2e8f0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.4rem'
-        }}>
-          <Calendar size={14} className="text-secondary" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        {/* Dynamic Live Date Badge */}
+        <div
+          className="d-none d-sm-flex align-items-center gap-1"
+          style={{
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            color: '#334155',
+            background: '#f8fafc',
+            padding: '0.35rem 0.65rem',
+            borderRadius: '6px',
+            border: '1px solid #e2e8f0',
+            whiteSpace: 'nowrap'
+          }}
+          title="Dynamic Live Date (Updates every day automatically)"
+        >
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
+          <Calendar size={13} className="text-secondary" />
           <span>{todayFormatted}</span>
         </div>
 

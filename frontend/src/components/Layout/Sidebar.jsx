@@ -13,10 +13,11 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   Settings,
-  Workflow
+  Workflow,
+  X
 } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen, onClose }) => {
   const navItems = [
     { section: "CORE OPERATIONS" },
     { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -41,19 +42,31 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="sidebar-brand-icon">
-          <CalendarRange size={20} />
-        </div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.02em', color: '#ffffff' }}>
-            DATASTRAW
+    <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+      <div className="sidebar-brand d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center gap-2">
+          <div className="sidebar-brand-icon">
+            <CalendarRange size={20} />
           </div>
-          <div style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 500 }}>
-            Smart Roster System
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.02em', color: '#ffffff' }}>
+              DATASTRAW
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 500 }}>
+              Smart Roster System
+            </div>
           </div>
         </div>
+        {onClose && (
+          <button
+            type="button"
+            className="btn btn-sm btn-dark text-muted d-lg-none p-1 border-0"
+            onClick={onClose}
+            aria-label="Close Sidebar"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
 
       <nav className="sidebar-nav">
@@ -70,6 +83,7 @@ const Sidebar = () => {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={onClose}
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             >
               <Icon size={18} />

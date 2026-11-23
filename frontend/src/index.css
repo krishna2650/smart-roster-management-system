@@ -331,3 +331,89 @@ body {
   background-color: var(--brand-accent-hover);
   color: white;
 }
+
+/* ==========================================================================
+   MOBILE & RESPONSIVE ADAPTATIONS
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    z-index: 1050;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.65);
+    z-index: 1040;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .top-navbar {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .page-body {
+    padding: 1rem 0.85rem !important;
+  }
+
+  /* Roster Table Mobile Horizontal Scroll */
+  .roster-table-container {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+
+  .roster-table th,
+  .roster-table td {
+    padding: 4px 2px !important;
+    min-width: 32px !important;
+  }
+
+  .roster-table .sticky-col {
+    min-width: 130px !important;
+    max-width: 140px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Dashboard mobile adjustments */
+  .stat-card {
+    padding: 1rem !important;
+  }
+
+  /* Chatbot mobile position */
+  .chatbot-window {
+    width: calc(100vw - 32px) !important;
+    right: 16px !important;
+    bottom: 80px !important;
+    max-height: 80vh !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .page-body {
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  .top-navbar h1 {
+    font-size: 0.92rem !important;
+  }
+}
+

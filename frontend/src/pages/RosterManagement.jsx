@@ -254,7 +254,8 @@ const RosterManagement = () => {
     }
   };
 
-  // Helper to calculate days in month
+  // Helper to calculate days in month and flag dynamic today
+  const todayStr = new Intl.DateTimeFormat('en-CA').format(new Date()); // YYYY-MM-DD
   const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
   const dateList = Array.from({ length: daysInMonth }, (_, i) => {
     const dayNum = i + 1;
@@ -263,7 +264,8 @@ const RosterManagement = () => {
     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'narrow' });
     const isSunday = dateObj.getDay() === 0;
     const isSaturday = dateObj.getDay() === 6;
-    return { dayNum, dateStr, dayName, isSunday, isSaturday };
+    const isToday = (dateStr === todayStr);
+    return { dayNum, dateStr, dayName, isSunday, isSaturday, isToday };
   });
 
   // Group entries according to current view
@@ -328,11 +330,16 @@ const RosterManagement = () => {
                   <th
                     key={d.dateStr}
                     style={{
-                      backgroundColor: d.isSunday ? '#fef2f2' : d.isSaturday ? '#f8fafc' : '#ffffff',
+                      backgroundColor: d.isToday ? '#eff6ff' : d.isSunday ? '#fef2f2' : d.isSaturday ? '#f8fafc' : '#ffffff',
+                      borderLeft: d.isToday ? '2px solid #2563eb' : undefined,
+                      borderRight: d.isToday ? '2px solid #2563eb' : undefined,
                       minWidth: '34px'
                     }}
                   >
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>{d.dayNum}</div>
+                    {d.isToday && (
+                      <div style={{ fontSize: '0.52rem', fontWeight: 800, color: '#2563eb', letterSpacing: '0.5px' }}>TODAY</div>
+                    )}
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: d.isToday ? '#2563eb' : undefined }}>{d.dayNum}</div>
                     <div style={{ fontSize: '0.65rem', color: d.isSunday ? '#dc2626' : '#64748b' }}>{d.dayName}</div>
                   </th>
                 ))}
@@ -360,7 +367,9 @@ const RosterManagement = () => {
                       <td
                         key={d.dateStr}
                         style={{
-                          backgroundColor: d.isSunday ? '#fffcfc' : '#ffffff',
+                          backgroundColor: d.isToday ? '#f0fdf4' : d.isSunday ? '#fffcfc' : '#ffffff',
+                          borderLeft: d.isToday ? '2px solid #2563eb' : undefined,
+                          borderRight: d.isToday ? '2px solid #2563eb' : undefined,
                           padding: '4px 2px'
                         }}
                       >
@@ -411,11 +420,16 @@ const RosterManagement = () => {
                   <th
                     key={d.dateStr}
                     style={{
-                      backgroundColor: d.isSunday ? '#fef2f2' : d.isSaturday ? '#f8fafc' : '#ffffff',
+                      backgroundColor: d.isToday ? '#eff6ff' : d.isSunday ? '#fef2f2' : d.isSaturday ? '#f8fafc' : '#ffffff',
+                      borderLeft: d.isToday ? '2px solid #2563eb' : undefined,
+                      borderRight: d.isToday ? '2px solid #2563eb' : undefined,
                       minWidth: '40px'
                     }}
                   >
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>{d.dayNum}</div>
+                    {d.isToday && (
+                      <div style={{ fontSize: '0.52rem', fontWeight: 800, color: '#2563eb', letterSpacing: '0.5px' }}>TODAY</div>
+                    )}
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: d.isToday ? '#2563eb' : undefined }}>{d.dayNum}</div>
                     <div style={{ fontSize: '0.65rem', color: d.isSunday ? '#dc2626' : '#64748b' }}>{d.dayName}</div>
                   </th>
                 ))}

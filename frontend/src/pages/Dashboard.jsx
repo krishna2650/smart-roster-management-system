@@ -65,11 +65,17 @@ const Dashboard = () => {
       {/* Top Banner with Quick Actions */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
-            Enterprise Workforce & Operations Pulse
-          </h2>
+          <div className="d-flex align-items-center gap-2">
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
+              Enterprise Workforce & Operations Pulse
+            </h2>
+            <span className="badge bg-success-subtle text-success border border-success-subtle d-none d-sm-inline-flex align-items-center gap-1 px-2 py-1" style={{ fontSize: '0.72rem' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }}></span>
+              Live Sync
+            </span>
+          </div>
           <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>
-            Real-time telemetry across 30+ specialists, dedicated brand managers, and 4 operational pods.
+            Real-time telemetry across 30+ specialists, dedicated brand managers, and 4 operational pods • <span className="fw-semibold text-dark">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </p>
         </div>
         <div className="d-flex gap-2 mt-2 mt-md-0">
