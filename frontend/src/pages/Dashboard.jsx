@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import {
   Users, Building2, GitBranch, Layers, AlertTriangle, CheckCircle,
-  CalendarDays, TrendingUp, ArrowRight, Play, RefreshCw, Sparkles
+  CalendarDays, TrendingUp, ArrowRight, Play, RefreshCw
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -171,15 +171,6 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="d-flex gap-2 mt-2 mt-md-0">
-          <Link
-            to="/showreel"
-            className="btn btn-outline-primary d-flex align-items-center gap-1.5"
-            style={{ fontSize: '0.85rem', fontWeight: 600, borderColor: '#93c5fd', color: '#1d4ed8', backgroundColor: '#eff6ff' }}
-            title="Open Interactive 3D Orbit Showcase"
-          >
-            <Sparkles size={14} color="#2563eb" />
-            3D Showreel
-          </Link>
           <button
             className="btn btn-outline-secondary d-flex align-items-center gap-2"
             onClick={handleRefresh}
