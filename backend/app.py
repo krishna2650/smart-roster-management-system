@@ -53,6 +53,16 @@ def create_app():
     app.register_blueprint(reports_bp)
     app.register_blueprint(chat_bp)
 
+    @app.route("/", methods=["GET"])
+    def root():
+        return jsonify({
+            "service": "DataStraw Smart Roster Management API",
+            "status": "online",
+            "health_check": "/api/health",
+            "version": "1.0.0",
+            "message": "Backend REST API is running live. Connect with the React frontend or explore /api endpoints."
+        })
+
     @app.route("/api/health", methods=["GET"])
     def health_check():
         db = get_db()
