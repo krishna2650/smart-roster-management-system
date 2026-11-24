@@ -21,7 +21,7 @@ export const Chatbot = () => {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: "👋 **Hello! I'm your DataStraw Ops Copilot.**\n\nI have real-time access to your live MongoDB database, specialist rosters, brand calendars, and scheduling algorithms. You can ask me anything or click a question below to start!",
+      text: "👋 **Hello! I'm your AI Assistant.**\n\nI have real-time access to your live MongoDB database, specialist rosters, brand calendars, and scheduling algorithms. You can ask me anything about your workforce, or click a question below to start!",
       suggestions: SUGGESTIONS
     }
   ]);
@@ -153,22 +153,44 @@ export const Chatbot = () => {
             bottom: '24px',
             right: '24px',
             zIndex: 1050,
-            width: '54px',
-            height: '54px',
-            borderRadius: '50%',
+            height: '46px',
+            padding: '0 18px',
+            borderRadius: '24px',
             backgroundColor: '#1e40af',
             color: '#ffffff',
-            border: 'none',
-            boxShadow: '0 4px 14px rgba(30, 64, 175, 0.4)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 6px 20px rgba(30, 64, 175, 0.45)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            gap: '8px',
             cursor: 'pointer',
-            transition: 'transform 0.15s ease, background-color 0.15s ease'
+            fontSize: '0.86rem',
+            fontWeight: 600,
+            fontFamily: 'var(--font-heading)',
+            letterSpacing: '-0.01em',
+            transition: 'transform 0.18s ease, box-shadow 0.18s ease'
           }}
-          title="Open DataStraw Ops Copilot"
+          title="Open AI Assistant"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(30, 64, 175, 0.55)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(30, 64, 175, 0.45)';
+          }}
         >
-          <Bot size={26} />
+          <Sparkles size={16} className="text-warning" />
+          <span>AI Assistant</span>
+          <span
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#4ade80',
+              boxShadow: '0 0 6px #4ade80'
+            }}
+          />
         </button>
       )}
 
@@ -184,14 +206,14 @@ export const Chatbot = () => {
             height: '600px',
             maxHeight: 'calc(100vh - 48px)',
             backgroundColor: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 12px 36px rgba(15, 23, 42, 0.2)',
+            borderRadius: '14px',
+            boxShadow: '0 16px 40px rgba(15, 23, 42, 0.25)',
             border: '1px solid #cbd5e1',
             zIndex: 1050,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            fontFamily: 'var(--font-body)'
           }}
         >
           {/* Header */}
@@ -211,8 +233,8 @@ export const Chatbot = () => {
                 style={{
                   width: '32px',
                   height: '32px',
-                  borderRadius: '6px',
-                  backgroundColor: '#1e40af',
+                  borderRadius: '8px',
+                  backgroundColor: '#2563eb',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -221,8 +243,8 @@ export const Chatbot = () => {
                 <Bot size={18} />
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', lineHeight: 1.2 }}>
-                  DataStraw Ops Copilot
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
+                  AI Assistant
                 </div>
                 <div style={{ fontSize: '0.68rem', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#4ade80' }}></span>

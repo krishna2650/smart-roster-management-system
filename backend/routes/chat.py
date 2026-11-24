@@ -18,7 +18,7 @@ def chat_message():
 
     if not msg:
         return jsonify({
-            "reply": "Hello! I am your DataStraw Ops Copilot. Ask me anything about employee schedules, client brand operating rules, roster coverage, active conflicts, or scheduling rules.",
+            "reply": "Hello! I am your AI Assistant. Ask me anything about employee schedules, client brand operating rules, roster coverage, active conflicts, or scheduling rules.",
             "suggestions": [
                 "What is the roster coverage for June 2026?",
                 "Who manages EcoGlow Skincare?",
@@ -298,7 +298,7 @@ def chat_message():
     conflicts_count = db[CONFLICTS_COL].count_documents({"resolution_status": "UNRESOLVED"})
     
     reply = (
-        f"### 🤖 DataStraw Ops Copilot\n\n"
+        f"### 🤖 Your AI Assistant\n\n"
         f"I can answer any operational, scheduling, workforce, or architectural question regarding DataStraw's operations:\n\n"
         f"* **Workforce Status:** {total_emps} active specialists across 4 operational pods.\n"
         f"* **Client Coverage:** {total_brands} brands monitored under 3 operating calendar models.\n"
