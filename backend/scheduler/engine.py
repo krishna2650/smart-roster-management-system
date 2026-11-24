@@ -458,6 +458,7 @@ class RosterEngine:
                                     "process_name": proc["name"],
                                     "conflict_type": "DOUBLE_BOOKING",
                                     "explanation": f"{emp['full_name']} is assigned to multiple distinct brand responsibilities on {d_str}.",
+                                    "description": f"{emp['full_name']} is assigned to multiple distinct brand responsibilities on {d_str}.",
                                     "suggested_resolution": f"Reassign one of the brand shifts to a backup resource in {emp.get('pod_id')}.",
                                     "resolution_status": "UNRESOLVED"
                                 })
@@ -541,6 +542,7 @@ class RosterEngine:
                         "process_name": proc["name"],
                         "conflict_type": "INSUFFICIENT_COVERAGE",
                         "explanation": explanation,
+                        "description": explanation,
                         "suggested_resolution": backup_suggestion,
                         "resolution_status": "UNRESOLVED"
                     })
