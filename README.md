@@ -17,7 +17,7 @@ LIVE DEMO :https://smart-roster-management-system-1-bfo5.onrender.com/
 3. [Technology Stack](#3-technology-stack)
 4. [System Architecture & Entity-Relationship Model](#4-system-architecture--entity-relationship-model)
 5. [Deterministic Roster Engine & Conflict Algorithm](#5-deterministic-roster-engine--conflict-algorithm)
-6. [Answers to Assessment Questions ("Tell Us How You Think")](#6-answers-to-assessment-questions-tell-us-how-you-think)
+6. [Answers to Assessment Questions](#6-answers-to-assessment-questions-tell-us-how-you-think)
 7. [RESTful API Reference](#7-restful-api-reference)
 8. [Installation & Local Setup](#8-installation--local-setup)
 9. [Automated Test Suite (100% Pass Rate)](#9-automated-test-suite-100-pass-rate)
