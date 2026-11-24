@@ -52,6 +52,7 @@ const RosterManagement = () => {
 
   // Messages
   const [feedback, setFeedback] = useState(null);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   const fetchRoster = async () => {
     try {
@@ -123,6 +124,7 @@ const RosterManagement = () => {
         message: `Roster generated deterministically! Coverage: ${res.data.result?.coverage_summary?.coverage_percentage}% (${res.data.result?.conflicts_count} conflicts detected).`
       });
       await fetchRoster();
+      setHasGenerated(true);
       window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       setFeedback({
@@ -152,6 +154,7 @@ const RosterManagement = () => {
         } : null
       });
       await fetchRoster();
+      setHasGenerated(true);
       window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       setFeedback({ type: 'danger', message: err.message });
@@ -189,6 +192,7 @@ const RosterManagement = () => {
       });
       setSelectedConflict(null);
       await fetchRoster();
+      setHasGenerated(true);
       window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       alert("Error assigning relief backup: " + (err.response?.data?.error || err.message));
@@ -207,6 +211,7 @@ const RosterManagement = () => {
         message: "Roster published successfully! Notifications and shift locks activated."
       });
       await fetchRoster();
+      setHasGenerated(true);
       window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       setFeedback({
@@ -264,6 +269,7 @@ const RosterManagement = () => {
         message: res.data.message || "Shift swap executed atomically and roster revalidated!"
       });
       await fetchRoster();
+      setHasGenerated(true);
       window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       setFeedback({ type: 'danger', message: "Execution error: " + (err.response?.data?.error || err.message) });
@@ -301,6 +307,7 @@ const RosterManagement = () => {
       });
       setEditingCell(null);
       await fetchRoster();
+      setHasGenerated(true);
       window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       alert("Error updating cell: " + (err.response?.data?.error || err.message));
@@ -623,32 +630,33 @@ const RosterManagement = () => {
 
         {/* Action Controls */}
         <div className="d-flex gap-2 align-items-center mt-2 mt-md-0">
-          <div className="d-flex align-items-center">
+          <div className="input-group input-group-sm" style={{ width: '180px' }}>
             <select
-              className="form-select form-select-sm fw-semibold text-primary shadow-xs"
-              value={`${selectedYear}-${String(selectedMonth).padStart(2, '0')}`}
+              className="form-select"
+              value={selectedMonth}
               onChange={e => {
-                const parts = e.target.value.split('-');
-                setSelectedYear(parseInt(parts[0]));
-                setSelectedMonth(parseInt(parts[1]));
+                setSelectedMonth(parseInt(e.target.value));
+                setHasGenerated(false);
               }}
-              style={{ width: '255px', fontSize: '0.82rem', borderColor: '#2563eb' }}
-              title="Select calendar month for roster generation and gap analysis"
+              title="Select Month"
             >
-              <option value="2026-12">December 2026 (Benchmark • 10 Gaps)</option>
-              <option value="2026-11">November 2026 (8 Gaps)</option>
-              <option value="2027-01">January 2027 (4 Gaps)</option>
-              <option value="2027-02">February 2027 (7 Gaps)</option>
-              <option value="2027-03">March 2027 (5 Gaps)</option>
-              <option value="2027-04">April 2027 (8 Gaps)</option>
-              <option value="2027-05">May 2027 (6 Gaps)</option>
-              <option value="2027-06">June 2027 (9 Gaps)</option>
-              <option value="2027-07">July 2027 (4 Gaps)</option>
-              <option value="2027-08">August 2027 (6 Gaps)</option>
-              <option value="2027-09">September 2027 (7 Gaps)</option>
-              <option value="2027-10">October 2027 (5 Gaps)</option>
-              <option value="2027-11">November 2027 (8 Gaps)</option>
-              <option value="2027-12">December 2027 (10 Gaps)</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                <option key={m} value={m}>
+                  {new Date(2026, m - 1, 1).toLocaleString('default', { month: 'short' })}
+                </option>
+              ))}
+            </select>
+            <select
+              className="form-select"
+              value={selectedYear}
+              onChange={e => {
+                setSelectedYear(parseInt(e.target.value));
+                setHasGenerated(false);
+              }}
+              title="Select Year"
+            >
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
             </select>
           </div>
 
@@ -780,8 +788,8 @@ const RosterManagement = () => {
         </div>
       )}
 
-      {/* Month-Specific Critical Coverage Gaps Panel */}
-      {rosterData && (() => {
+      {/* Month-Specific Critical Coverage Gaps Panel - Shown only after clicking Generate */}
+      {hasGenerated && rosterData && (() => {
         const criticalGaps = (rosterData.conflicts || []).filter(
           c => c.severity === 'CRITICAL' && c.resolution_status === 'UNRESOLVED'
         );
