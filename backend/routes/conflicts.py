@@ -19,6 +19,8 @@ def get_conflicts():
     status = request.args.get("status")
     date_filter = request.args.get("date")
     roster_id = request.args.get("roster_id")
+    month = request.args.get("month")
+    year = request.args.get("year")
 
     query = {}
     if severity:
@@ -33,6 +35,10 @@ def get_conflicts():
         query["date"] = date_filter
     if roster_id:
         query["roster_id"] = to_object_id(roster_id)
+    if month and year:
+        query["date"] = {"$regex": f"^{year}-{int(month):02d}-"}
+    elif month:
+        query["date"] = {"$regex": f"-{int(month):02d}-"}
 
     conflicts = list(db[CONFLICTS_COL].find(query).sort("date", 1))
 
@@ -45,11 +51,19 @@ def get_conflicts():
 
     unresolved_count = len([c for c in conflicts if c.get("resolution_status", "UNRESOLVED") == "UNRESOLVED"])
 
-    # Global stats across collection for header telemetry & badges
-    global_total = db[CONFLICTS_COL].count_documents({})
-    global_unresolved = db[CONFLICTS_COL].count_documents({"resolution_status": "UNRESOLVED"})
-    global_critical_unresolved = db[CONFLICTS_COL].count_documents({"severity": "CRITICAL", "resolution_status": "UNRESOLVED"})
-    global_resolved = db[CONFLICTS_COL].count_documents({"resolution_status": "RESOLVED"})
+    # Base query for scope (e.g. Month/Year scope if specified)
+    scope_query = {}
+    if month and year:
+        scope_query["date"] = {"$regex": f"^{year}-{int(month):02d}-"}
+    elif month:
+        scope_query["date"] = {"$regex": f"-{int(month):02d}-"}
+    elif roster_id:
+        scope_query["roster_id"] = to_object_id(roster_id)
+
+    global_total = db[CONFLICTS_COL].count_documents(scope_query)
+    global_unresolved = db[CONFLICTS_COL].count_documents({**scope_query, "resolution_status": "UNRESOLVED"})
+    global_critical_unresolved = db[CONFLICTS_COL].count_documents({**scope_query, "severity": "CRITICAL", "resolution_status": "UNRESOLVED"})
+    global_resolved = db[CONFLICTS_COL].count_documents({**scope_query, "resolution_status": "RESOLVED"})
 
     return jsonify({
         "conflicts": serialize_doc(conflicts),

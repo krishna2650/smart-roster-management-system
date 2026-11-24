@@ -276,6 +276,9 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Configure environment variables from template (.env.example is provided in repo root and backend)
+cp .env.example .env
+
 # Seed benchmark database (32 employees, 12 brands, 4 pods, 35 processes)
 python seeds/seed_data.py
 

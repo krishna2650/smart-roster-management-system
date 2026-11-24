@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import {
   AlertTriangle, ShieldAlert, CheckCircle, ArrowRight, UserPlus,
-  RefreshCw, Check, X, Filter, Sparkles
+  RefreshCw, Check, X, Filter, Sparkles, Calendar
 } from 'lucide-react';
 
 const ConflictCenter = () => {
@@ -10,6 +10,7 @@ const ConflictCenter = () => {
   const [loading, setLoading] = useState(true);
   const [severityFilter, setSeverityFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('UNRESOLVED');
+  const [monthFilter, setMonthFilter] = useState('');
   const [counts, setCounts] = useState({ total: 0, critical: 0, unresolved: 0, resolved: 0 });
   
   // Backup modal state
@@ -21,7 +22,12 @@ const ConflictCenter = () => {
   const fetchConflicts = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/conflicts?severity=${severityFilter}&status=${statusFilter}`);
+      const queryParams = new URLSearchParams();
+      if (severityFilter) queryParams.append('severity', severityFilter);
+      if (statusFilter) queryParams.append('status', statusFilter);
+      if (monthFilter) queryParams.append('month', monthFilter);
+      
+      const res = await api.get(`/conflicts?${queryParams.toString()}`);
       setConflicts(res.data.conflicts || []);
       setCounts({
         total: res.data.global_total ?? res.data.total ?? 0,
@@ -38,7 +44,7 @@ const ConflictCenter = () => {
 
   useEffect(() => {
     fetchConflicts();
-  }, [severityFilter, statusFilter]);
+  }, [severityFilter, statusFilter, monthFilter]);
 
   const handleOpenBackups = async (c) => {
     setSelectedConflict(c);
@@ -176,6 +182,30 @@ const ConflictCenter = () => {
       <div className="card border-0 shadow-sm mb-4">
         <div className="card-body p-3">
           <div className="row g-2 align-items-center">
+            <div className="col-md-4">
+              <label className="form-label text-muted mb-1 d-flex align-items-center gap-1" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                <Calendar size={13} className="text-primary" /> Filter by Calendar Month
+              </label>
+              <select
+                className="form-select form-select-sm"
+                value={monthFilter}
+                onChange={e => setMonthFilter(e.target.value)}
+              >
+                <option value="">All Months</option>
+                <option value="12">December (10 Conflicts - PureSkin, EcoGlow, Velvet Thread, VoltTech)</option>
+                <option value="1">January (VoltTech, NutriFuel)</option>
+                <option value="2">February (KetoBites, UrbanStyle, VoltTech)</option>
+                <option value="3">March (AudioPulse, VoltTech, Zenith)</option>
+                <option value="4">April (SmartCharge, LuxeHome, VoltTech, Zenith)</option>
+                <option value="5">May (GlowJewel, NutriFuel)</option>
+                <option value="6">June (UrbanStyle, PureSkin, Velvet Thread)</option>
+                <option value="7">July (KetoBites, VoltTech)</option>
+                <option value="8">August (AudioPulse, EcoGlow)</option>
+                <option value="9">September (LuxeHome, SmartCharge, VoltTech)</option>
+                <option value="10">October (GlowJewel, VoltTech, Zenith)</option>
+                <option value="11">November (NutriFuel, UrbanStyle, VoltTech, Zenith)</option>
+              </select>
+            </div>
             <div className="col-md-4">
               <label className="form-label text-muted mb-1" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Filter by Status</label>
               <select

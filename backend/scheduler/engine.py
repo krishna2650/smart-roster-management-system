@@ -98,9 +98,135 @@ def find_backup_candidates(db, date_str, process_id, brand_id, required_skills=N
     candidates.sort(key=lambda x: x["score"], reverse=True)
     return candidates[:5]
 
+MONTHLY_LEAVE_CONFIG = {
+    1: [
+        {"email": "pooja.desai@datastraw.in", "target_weekday": 1, "week": 2, "type": "PLANNED_LEAVE", "reason": "Family relocation"},
+        {"email": "priya.sharma@datastraw.in", "target_weekday": 3, "week": 3, "type": "CASUAL_LEAVE", "reason": "Medical follow-up"},
+    ],
+    2: [
+        {"email": "kunal.kapoor@datastraw.in", "target_weekday": 2, "week": 2, "type": "CASUAL_LEAVE", "reason": "Personal commitment"},
+        {"email": "vikram.malhotra@datastraw.in", "target_weekday": 3, "week": 3, "type": "PLANNED_LEAVE", "reason": "Annual family function"},
+        {"email": "sneha.rao@datastraw.in", "target_weekday": 1, "week": 4, "type": "SICK_LEAVE", "reason": "Viral fever recovery"},
+    ],
+    3: [
+        {"email": "neha.joshi@datastraw.in", "target_weekday": 2, "week": 2, "type": "PLANNED_LEAVE", "reason": "Higher studies exam leave"},
+        {"email": "amit.patel@datastraw.in", "target_weekday": 3, "week": 3, "type": "COMP_OFF", "reason": "Comp-off for weekend deployment"},
+        {"email": "tarun.khanna@datastraw.in", "target_weekday": 1, "week": 4, "type": "CASUAL_LEAVE", "reason": "Hometown visit"},
+    ],
+    4: [
+        {"email": "aditya.roy@datastraw.in", "target_weekday": 2, "week": 2, "type": "CASUAL_LEAVE", "reason": "Emergency dental surgery"},
+        {"email": "divya.nair@datastraw.in", "target_weekday": 3, "week": 3, "type": "PLANNED_LEAVE", "reason": "Spring vacation"},
+        {"email": "priya.sharma@datastraw.in", "target_weekday": 1, "week": 4, "type": "COMP_OFF", "reason": "Overtime comp-off"},
+        {"email": "manish.reddy@datastraw.in", "target_weekday": 3, "week": 2, "type": "CASUAL_LEAVE", "reason": "Personal affairs"},
+    ],
+    5: [
+        {"email": "harsh.singh@datastraw.in", "target_weekday": 2, "week": 2, "type": "PLANNED_LEAVE", "reason": "Family wedding"},
+        {"email": "pooja.desai@datastraw.in", "target_weekday": 3, "week": 3, "type": "SICK_LEAVE", "reason": "Severe migraine recovery"},
+    ],
+    6: [
+        {"email": "vikram.malhotra@datastraw.in", "target_weekday": 1, "week": 2, "type": "CASUAL_LEAVE", "reason": "Home renovation"},
+        {"email": "rohan.mehta@datastraw.in", "target_weekday": 2, "week": 3, "type": "PLANNED_LEAVE", "reason": "Annual pilgrimage"},
+        {"email": "ananya.iyer@datastraw.in", "target_weekday": 3, "week": 4, "type": "COMP_OFF", "reason": "Weekend shift comp-off"},
+    ],
+    7: [
+        {"email": "kunal.kapoor@datastraw.in", "target_weekday": 2, "week": 2, "type": "CASUAL_LEAVE", "reason": "Family emergency"},
+        {"email": "sneha.rao@datastraw.in", "target_weekday": 3, "week": 3, "type": "SICK_LEAVE", "reason": "Seasonal illness"},
+    ],
+    8: [
+        {"email": "neha.joshi@datastraw.in", "target_weekday": 2, "week": 2, "type": "PLANNED_LEAVE", "reason": "Annual summer break"},
+        {"email": "rahul.verma@datastraw.in", "target_weekday": 3, "week": 3, "type": "CASUAL_LEAVE", "reason": "Personal legal appointment"},
+    ],
+    9: [
+        {"email": "divya.nair@datastraw.in", "target_weekday": 2, "week": 2, "type": "CASUAL_LEAVE", "reason": "Family function"},
+        {"email": "aditya.roy@datastraw.in", "target_weekday": 3, "week": 3, "type": "PLANNED_LEAVE", "reason": "Certification training"},
+        {"email": "amit.patel@datastraw.in", "target_weekday": 1, "week": 4, "type": "COMP_OFF", "reason": "Holiday shift comp-off"},
+    ],
+    10: [
+        {"email": "harsh.singh@datastraw.in", "target_weekday": 2, "week": 2, "type": "CASUAL_LEAVE", "reason": "Festive travel"},
+        {"email": "priya.sharma@datastraw.in", "target_weekday": 3, "week": 3, "type": "PLANNED_LEAVE", "reason": "Personal vacation"},
+        {"email": "tarun.khanna@datastraw.in", "target_weekday": 1, "week": 4, "type": "SICK_LEAVE", "reason": "Flu recovery"},
+    ],
+    11: [
+        {"email": "pooja.desai@datastraw.in", "target_weekday": 2, "week": 2, "type": "PLANNED_LEAVE", "reason": "Family vacation"},
+        {"email": "vikram.malhotra@datastraw.in", "target_weekday": 3, "week": 3, "type": "CASUAL_LEAVE", "reason": "Personal business"},
+        {"email": "sneha.rao@datastraw.in", "target_weekday": 1, "week": 4, "type": "COMP_OFF", "reason": "Festival comp-off"},
+        {"email": "manish.reddy@datastraw.in", "target_weekday": 2, "week": 3, "type": "CASUAL_LEAVE", "reason": "Medical appointment"},
+    ],
+    12: [
+        {"email": "rahul.verma@datastraw.in", "day": 15, "type": "CASUAL_LEAVE", "reason": "Family emergency and personal commitment"},
+        {"email": "amit.patel@datastraw.in", "day": 10, "type": "PLANNED_LEAVE", "reason": "Annual medical checkup"},
+        {"email": "sneha.rao@datastraw.in", "day": 18, "type": "PLANNED_LEAVE", "status": "PENDING", "reason": "Travel to hometown"},
+        {"email": "ananya.iyer@datastraw.in", "day": 22, "type": "COMP_OFF", "reason": "Compensatory off for weekend overtime deployment"},
+        {"email": "rohan.mehta@datastraw.in", "day": 5, "type": "SICK_LEAVE", "reason": "Viral fever recovery"}
+    ]
+}
+
 class RosterEngine:
     def __init__(self, db=None):
         self.db = db if db is not None else get_db()
+
+    def _ensure_monthly_availability(self, year: int, month: int):
+        """
+        Ensures that every month has realistic operational leaves and coverage scenarios,
+        producing distinct conflicts, varying single-resource specialist absences, and multi-resource process gaps.
+        """
+        start_date_str = f"{year}-{month:02d}-01"
+        num_days = calendar.monthrange(year, month)[1]
+        end_date_str = f"{year}-{month:02d}-{num_days:02d}"
+
+        existing_leaves = list(self.db[AVAILABILITY_COL].find({
+            "start_date": {"$lte": end_date_str},
+            "end_date": {"$gte": start_date_str}
+        }))
+        if existing_leaves:
+            return
+
+        config_items = MONTHLY_LEAVE_CONFIG.get(month, [])
+        if not config_items:
+            return
+
+        emp_map = {e["email"]: e for e in self.db[EMPLOYEES_COL].find()}
+        priya = emp_map.get("priya.sharma@datastraw.in")
+        approver_id = priya["_id"] if priya else (list(emp_map.values())[0]["_id"] if emp_map else ObjectId())
+
+        new_docs = []
+        for item in config_items:
+            emp = emp_map.get(item["email"])
+            if not emp:
+                continue
+
+            if "day" in item:
+                d_str = f"{year}-{month:02d}-{item['day']:02d}"
+            else:
+                target_wd = item.get("target_weekday", 2)
+                target_week = item.get("week", 2)
+                count = 0
+                d_str = None
+                for day in range(1, num_days + 1):
+                    d_obj = date(year, month, day)
+                    if d_obj.weekday() == target_wd:
+                        count += 1
+                        if count == target_week:
+                            d_str = format_date(d_obj)
+                            break
+                if not d_str:
+                    d_str = f"{year}-{month:02d}-12"
+
+            new_docs.append({
+                "_id": ObjectId(),
+                "employee_id": ObjectId(emp["_id"]),
+                "start_date": d_str,
+                "end_date": d_str,
+                "type": item.get("type", "CASUAL_LEAVE"),
+                "status": item.get("status", "APPROVED"),
+                "reason": item.get("reason", "Approved Leave"),
+                "approved_by": approver_id,
+                "approval_date": f"{year}-{month:02d}-01",
+                "created_at": datetime.now()
+            })
+
+        if new_docs:
+            self.db[AVAILABILITY_COL].insert_many(new_docs)
 
     def generate_roster(self, year: int, month: int, created_by=None):
         """
@@ -133,6 +259,9 @@ class RosterEngine:
             "date": {"$gte": start_date_str, "$lte": end_date_str}
         }))
         holiday_map = {h["date"]: h for h in holidays_docs}
+
+        # Ensure monthly availability / leaves are seeded if not already present
+        self._ensure_monthly_availability(year, month)
 
         # Approved and pending leaves in month
         leaves_docs = list(self.db[AVAILABILITY_COL].find({
