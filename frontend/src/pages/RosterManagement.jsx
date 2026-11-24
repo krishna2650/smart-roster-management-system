@@ -63,15 +63,13 @@ const RosterManagement = () => {
       if (viewMode === 'brand' && selectedBrandFilter) queryParams += `&brand_id=${selectedBrandFilter}`;
       if (viewMode === 'employee' && selectedEmpFilter) queryParams += `&employee_id=${selectedEmpFilter}`;
 
-      const res = await api.get(`/rosters/${rosterId}?${queryParams}`);
-      setRosterData(res.data.roster);
+      const rosterPromise = api.get(`/rosters/${rosterId}?${queryParams}`);
+      const fatiguePromise = api.get(`/rosters/${rosterId}/fatigue`).catch(err => ({ data: null }));
 
-      // Also fetch fatigue guardrail metrics
-      try {
-        const fatRes = await api.get(`/rosters/${rosterId}/fatigue`);
+      const [res, fatRes] = await Promise.all([rosterPromise, fatiguePromise]);
+      setRosterData(res.data.roster);
+      if (fatRes?.data) {
         setFatigueData(fatRes.data);
-      } catch (fatErr) {
-        console.error("Fatigue fetch err", fatErr);
       }
     } catch (err) {
       if (err.response?.status === 404) {

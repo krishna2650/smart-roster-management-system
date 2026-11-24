@@ -133,8 +133,18 @@ class MockCollection:
     def insert_many(self, doc_list):
         inserted_ids = []
         for d in doc_list:
-            res = self.insert_one(d)
-            inserted_ids.append(res.inserted_id)
+            new_doc = dict(d)
+            if "_id" not in new_doc:
+                new_doc["_id"] = ObjectId()
+            elif isinstance(new_doc["_id"], str):
+                try:
+                    new_doc["_id"] = ObjectId(new_doc["_id"])
+                except Exception:
+                    pass
+            self.docs.append(new_doc)
+            inserted_ids.append(new_doc["_id"])
+        if inserted_ids:
+            self.db_store.save()
         class InsertManyResult:
             def __init__(self, ids):
                 self.inserted_ids = ids
@@ -290,7 +300,7 @@ class FallbackDBStore:
                             item[k] = v.isoformat()
                     serialized[col].append(item)
             with open(self.storage_path, "w", encoding="utf-8") as f:
-                json.dump(serialized, f, indent=2, default=str)
+                json.dump(serialized, f, separators=(',', ':'), default=str)
         except Exception as e:
             print(f"[FallbackDBStore] Error saving storage: {e}")
 
@@ -311,7 +321,7 @@ class Database:
         # Check if remote or local MongoClient is available
         try:
             print(f"Connecting to MongoDB at: {mongo_uri}")
-            client = MongoClient(mongo_uri, serverSelectionTimeoutMS=2000, connectTimeoutMS=2000)
+            client = MongoClient(mongo_uri, serverSelectionTimeoutMS=400, connectTimeoutMS=400)
             client.admin.command('ping')
             cls.client = client
             cls.db = client[Config.DB_NAME]
