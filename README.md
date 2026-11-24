@@ -162,7 +162,7 @@ flowchart TD
 
 ---
 
-## 6. Answers to Assessment Questions ("Tell Us How You Think")
+## 6. Answers to Assessment Questions 
 
 ### Question 1: How did you model employees, brands, processes, pods, and their relationships?
  I avoided monolithic data structures and implemented a normalized, decoupled architecture using MongoDB ObjectId references:
