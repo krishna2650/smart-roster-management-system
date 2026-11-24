@@ -22,8 +22,7 @@ LIVE DEMO :https://smart-roster-management-system-1-bfo5.onrender.com/
 8. [Installation & Local Setup](#8-installation--local-setup)
 9. [Automated Test Suite (100% Pass Rate)](#9-automated-test-suite-100-pass-rate)
 10. [Evaluation Credentials & Demo Accounts](#10-evaluation-credentials--demo-accounts)
-11. [3–5 Minute Demo Video Walkthrough Script](#11-35-minute-demo-video-walkthrough-script)
-12. [Submission Approach Note & Deliverables](#12-submission-approach-note--deliverables)
+
 
 ---
 
