@@ -47,6 +47,18 @@ def get_roster_details(r_id):
     db = get_db()
     query = {"roster_id": r_id} if not (len(r_id) == 24 and all(c in "0123456789abcdefABCDEF" for c in r_id)) else {"_id": to_object_id(r_id)}
     roster = db[ROSTERS_COL].find_one(query)
+    if not roster and r_id.startswith("ROSTER-"):
+        # Auto-create roster on the fly for requested month if not yet generated
+        try:
+            parts = r_id.split("-")
+            req_year = int(parts[1])
+            req_month = int(parts[2])
+            engine = RosterEngine(db)
+            engine.generate_roster(req_year, req_month)
+            roster = db[ROSTERS_COL].find_one({"roster_id": r_id})
+        except Exception as e:
+            print("Auto-generate error:", e)
+
     if not roster:
         return jsonify({"error": "Roster not found"}), 404
 
@@ -164,6 +176,17 @@ def reassign_backup(r_id):
     db = get_db()
     query = {"roster_id": r_id} if not (len(r_id) == 24 and all(c in "0123456789abcdefABCDEF" for c in r_id)) else {"_id": to_object_id(r_id)}
     roster = db[ROSTERS_COL].find_one(query)
+    if not roster and r_id.startswith("ROSTER-"):
+        try:
+            parts = r_id.split("-")
+            req_year = int(parts[1])
+            req_month = int(parts[2])
+            engine = RosterEngine(db)
+            engine.generate_roster(req_year, req_month)
+            roster = db[ROSTERS_COL].find_one({"roster_id": r_id})
+        except Exception as e:
+            print("Auto-generate in reassign-backup error:", e)
+
     if not roster:
         return jsonify({"error": "Roster not found"}), 404
 
@@ -192,18 +215,25 @@ def reassign_backup(r_id):
                 break
 
     if gap_fixed_count > 0:
+        # Commit updated entries directly to ROSTERS_COL
+        db[ROSTERS_COL].update_one(
+            {"_id": roster["_id"]},
+            {"$set": {"entries": entries, "updated_at": datetime.now()}}
+        )
+
         conflict_query = {"roster_id": roster["_id"], "date": target_date}
-        if brand_id:
-            conflict_query["brand_id"] = to_object_id(brand_id)
-        elif process_id:
+        if process_id:
             conflict_query["process_id"] = to_object_id(process_id)
+        elif brand_id:
+            conflict_query["brand_id"] = to_object_id(brand_id)
 
         db[CONFLICTS_COL].update_many(
             conflict_query,
             {
                 "$set": {
                     "resolution_status": "RESOLVED",
-                    "resolution_notes": f"Resolved by assigning backup: {emp['full_name']}"
+                    "resolution_notes": f"Resolved by assigning backup: {emp['full_name']}",
+                    "resolved_at": datetime.now()
                 }
             }
         )

@@ -137,7 +137,11 @@ const RosterManagement = () => {
         type: val.is_valid ? 'success' : 'warning',
         message: val.is_valid
           ? "Roster validation passed! All mandatory client processes have 100% adequate coverage."
-          : `Validation Warning: Found ${val.critical_conflicts} critical coverage gap(s). Please review and assign backups before publishing.`
+          : `Validation Warning: Found ${val.critical_conflicts} critical coverage gap(s). Please review and assign backups before publishing.`,
+        action: !val.is_valid ? {
+          label: "Resolve Critical Gaps in Conflict Center →",
+          onClick: () => { window.location.href = `/conflicts?month=${selectedMonth}`; }
+        } : null
       });
       await fetchRoster();
     } catch (err) {
@@ -633,7 +637,18 @@ const RosterManagement = () => {
 
       {feedback && (
         <div className={`alert alert-${feedback.type} d-flex align-items-center justify-content-between py-2 mb-3`} style={{ fontSize: '0.85rem' }}>
-          <div>{feedback.message}</div>
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            <span>{feedback.message}</span>
+            {feedback.action && (
+              <button
+                className="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold"
+                style={{ fontSize: '0.78rem' }}
+                onClick={feedback.action.onClick}
+              >
+                {feedback.action.label}
+              </button>
+            )}
+          </div>
           <button type="button" className="btn-close" onClick={() => setFeedback(null)}></button>
         </div>
       )}

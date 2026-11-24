@@ -62,11 +62,12 @@ const ConflictCenter = () => {
   const handleAssignBackup = async (candidate) => {
     if (!selectedConflict) return;
     try {
-      // Find roster ID
-      const rosterId = selectedConflict.roster_id;
+      // Find roster ID or derive from date (e.g. ROSTER-2026-12)
+      const rosterId = selectedConflict.roster_id || `ROSTER-${selectedConflict.date.substring(0, 7)}`;
       await api.post(`/rosters/${rosterId}/reassign-backup`, {
         date: selectedConflict.date,
         process_id: selectedConflict.process_id,
+        brand_id: selectedConflict.brand_id,
         employee_id: candidate.employee_id
       });
       setSuccessMsg(`Successfully assigned ${candidate.employee_name} as relief backup for ${selectedConflict.brand_name}! Roster revalidated.`);
@@ -120,32 +121,60 @@ const ConflictCenter = () => {
 
       {/* Telemetry Summary Cards */}
       <div className="row g-2 mb-3">
-        <div className="col-sm-4 col-12">
+        <div className="col-sm-3 col-6">
           <div
             className={`p-2 px-3 rounded border d-flex align-items-center justify-content-between ${
-              statusFilter === 'UNRESOLVED' ? 'bg-danger text-white border-danger shadow-sm' : 'bg-white text-dark shadow-xs'
+              severityFilter === 'CRITICAL' ? 'bg-danger text-white border-danger shadow-sm' : 'bg-white text-dark shadow-xs'
             }`}
             style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
-            onClick={() => setStatusFilter('UNRESOLVED')}
+            onClick={() => {
+              setSeverityFilter(severityFilter === 'CRITICAL' ? '' : 'CRITICAL');
+              setStatusFilter('UNRESOLVED');
+            }}
+            title="Filter strictly by Critical Mandatory Coverage Gaps"
+          >
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Critical Gaps</div>
+              <div style={{ fontSize: '0.68rem', opacity: 0.85 }}>Mandatory Shortfalls</div>
+            </div>
+            <span className={`badge ${severityFilter === 'CRITICAL' ? 'bg-white text-danger' : 'bg-danger text-white'}`} style={{ fontSize: '0.9rem' }}>
+              {counts.critical}
+            </span>
+          </div>
+        </div>
+
+        <div className="col-sm-3 col-6">
+          <div
+            className={`p-2 px-3 rounded border d-flex align-items-center justify-content-between ${
+              statusFilter === 'UNRESOLVED' && severityFilter !== 'CRITICAL' ? 'bg-warning text-dark border-warning shadow-sm' : 'bg-white text-dark shadow-xs'
+            }`}
+            style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
+            onClick={() => {
+              setStatusFilter('UNRESOLVED');
+              setSeverityFilter('');
+            }}
             title="View Active / Unresolved live coverage gaps"
           >
             <div>
               <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Active Live Gaps</div>
               <div style={{ fontSize: '0.68rem', opacity: 0.85 }}>Requiring Relief Backup</div>
             </div>
-            <span className={`badge ${statusFilter === 'UNRESOLVED' ? 'bg-white text-danger' : 'bg-danger text-white'}`} style={{ fontSize: '0.9rem' }}>
+            <span className={`badge ${statusFilter === 'UNRESOLVED' && severityFilter !== 'CRITICAL' ? 'bg-dark text-white' : 'bg-warning text-dark'}`} style={{ fontSize: '0.9rem' }}>
               {counts.unresolved}
             </span>
           </div>
         </div>
 
-        <div className="col-sm-4 col-12">
+        <div className="col-sm-3 col-6">
           <div
             className={`p-2 px-3 rounded border d-flex align-items-center justify-content-between ${
               statusFilter === 'RESOLVED' ? 'bg-success text-white border-success shadow-sm' : 'bg-white text-dark shadow-xs'
             }`}
             style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
-            onClick={() => setStatusFilter('RESOLVED')}
+            onClick={() => {
+              setStatusFilter('RESOLVED');
+              setSeverityFilter('');
+            }}
             title="View Resolved conflicts & audit logs"
           >
             <div>
@@ -158,20 +187,23 @@ const ConflictCenter = () => {
           </div>
         </div>
 
-        <div className="col-sm-4 col-12">
+        <div className="col-sm-3 col-6">
           <div
             className={`p-2 px-3 rounded border d-flex align-items-center justify-content-between ${
-              statusFilter === '' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-dark shadow-xs'
+              statusFilter === '' && severityFilter === '' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-dark shadow-xs'
             }`}
             style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
-            onClick={() => setStatusFilter('')}
+            onClick={() => {
+              setStatusFilter('');
+              setSeverityFilter('');
+            }}
             title="View All conflicts"
           >
             <div>
               <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>All Conflicts</div>
               <div style={{ fontSize: '0.68rem', opacity: 0.85 }}>Active + Resolved Records</div>
             </div>
-            <span className={`badge ${statusFilter === '' ? 'bg-white text-primary' : 'bg-primary text-white'}`} style={{ fontSize: '0.9rem' }}>
+            <span className={`badge ${statusFilter === '' && severityFilter === '' ? 'bg-white text-primary' : 'bg-primary text-white'}`} style={{ fontSize: '0.9rem' }}>
               {counts.total}
             </span>
           </div>

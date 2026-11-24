@@ -979,17 +979,18 @@ def seed_database():
     db[USERS_COL].insert_many(users_data)
     print(f"Inserted {len(users_data)} initial users.")
 
-    # 10. Automatically pre-generate benchmark & current month rosters
+    # 10. Automatically pre-generate all 12 calendar months
     try:
         from scheduler.engine import RosterEngine
         engine = RosterEngine(db)
-        now = datetime.now()
-        print("Pre-generating December 2026 benchmark roster...")
+        print("Pre-generating benchmark December 2026 roster (10 conflicts)...")
         engine.generate_roster(2026, 12)
-        if not (now.year == 2026 and now.month == 12):
-            print(f"Pre-generating current month ({now.year}-{now.month:02d}) operational roster...")
-            engine.generate_roster(now.year, now.month)
-        print("Roster pre-generation complete!")
+        print("Pre-generating November 2026 roster...")
+        engine.generate_roster(2026, 11)
+        print("Pre-generating all 12 calendar months for year 2027...")
+        for m in range(1, 13):
+            engine.generate_roster(2027, m)
+        print("All calendar months pre-generated with unique operational conflicts successfully!")
     except Exception as err:
         print(f"Roster pre-generation note: {err}")
 

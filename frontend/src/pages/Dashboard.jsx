@@ -314,7 +314,12 @@ const Dashboard = () => {
         </div>
 
         <div className="col-xl-3 col-sm-6">
-          <div className="stat-card">
+          <div
+            className="stat-card"
+            style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
+            onClick={() => window.location.href = '/conflicts'}
+            title="Click to view and resolve all critical coverage gaps in Conflict Center"
+          >
             <div className="d-flex justify-content-between align-items-start">
               <div>
                 <div className="text-muted" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
@@ -324,7 +329,7 @@ const Dashboard = () => {
                   {stats.unresolved_conflicts !== undefined ? stats.unresolved_conflicts : 10}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600, marginTop: '4px' }}>
-                  {stats.critical_conflicts || 10} Critical Coverage Gaps
+                  {stats.critical_conflicts || 10} Critical Coverage Gaps <span style={{ fontSize: '0.7rem' }}>→</span>
                 </div>
               </div>
               <div style={{ background: '#fef2f2', color: '#dc2626', padding: '10px', borderRadius: '10px' }}>

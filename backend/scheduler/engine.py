@@ -372,7 +372,7 @@ class RosterEngine:
                 coverage_stats["total_process_days_required"] += 1
                 assigned_records = process_assignments.get(p_id, [])
 
-                # Filter valid assignments by effective dates
+                # Filter valid assignments by effective dates and primary resource status
                 active_assigned_emp_ids = []
                 for a in assigned_records:
                     eff_start = a.get("effective_start_date")
@@ -381,7 +381,8 @@ class RosterEngine:
                         continue
                     if eff_end and eff_end < d_str:
                         continue
-                    active_assigned_emp_ids.append(str(a["employee_id"]))
+                    if a.get("is_primary", True):
+                        active_assigned_emp_ids.append(str(a["employee_id"]))
 
                 # Evaluate available assigned employees
                 working_allocated = []
