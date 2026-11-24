@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import {
   CalendarRange, Play, RefreshCw, CheckCircle, AlertTriangle,
@@ -9,6 +10,7 @@ import {
 import { StatusBadge } from '../components/Common/Badge';
 
 const RosterManagement = () => {
+  const navigate = useNavigate();
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(2026);
   const [selectedMonth, setSelectedMonth] = useState(12);
@@ -148,7 +150,7 @@ const RosterManagement = () => {
           : `Validation Warning: Found ${val.critical_conflicts} critical coverage gap(s). Please review and assign backups before publishing.`,
         action: !val.is_valid ? {
           label: "Resolve Critical Gaps in Conflict Center →",
-          onClick: () => { window.location.href = `/conflicts?month=${monthParam}&severity=CRITICAL`; }
+          onClick: () => { navigate(`/conflicts?month=${monthParam}&severity=CRITICAL`); }
         } : null
       });
       await fetchRoster();
@@ -770,7 +772,7 @@ const RosterManagement = () => {
                   style={{ fontSize: '0.75rem' }}
                   onClick={() => {
                     const monthParam = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-                    window.location.href = `/conflicts?month=${monthParam}&severity=CRITICAL`;
+                    navigate(`/conflicts?month=${monthParam}&severity=CRITICAL`);
                   }}
                   title="Open Conflict Center filtered to this month"
                 >
@@ -826,7 +828,7 @@ const RosterManagement = () => {
                 style={{ fontSize: '0.78rem' }}
                 onClick={() => {
                   const monthParam = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-                  window.location.href = `/conflicts?month=${monthParam}&severity=CRITICAL`;
+                  navigate(`/conflicts?month=${monthParam}&severity=CRITICAL`);
                 }}
               >
                 Manage in Conflict Center →

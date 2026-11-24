@@ -27,6 +27,22 @@ const ConflictCenter = () => {
     if (statusFilter) params.set('status', statusFilter);
     setSearchParams(params, { replace: true });
   }, [monthFilter, severityFilter, statusFilter, setSearchParams]);
+
+  // Keep filters in sync when navigation changes URL search params
+  useEffect(() => {
+    const qMonth = searchParams.get('month');
+    const qSeverity = searchParams.get('severity');
+    const qStatus = searchParams.get('status');
+    if (qMonth && qMonth !== monthFilter) {
+      setMonthFilter(qMonth);
+    }
+    if (qSeverity !== null && qSeverity !== severityFilter) {
+      setSeverityFilter(qSeverity);
+    }
+    if (qStatus !== null && qStatus !== statusFilter) {
+      setStatusFilter(qStatus);
+    }
+  }, [searchParams]);
   
   // Backup modal state
   const [selectedConflict, setSelectedConflict] = useState(null);

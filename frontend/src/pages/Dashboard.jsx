@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import {
   Users, Building2, GitBranch, Layers, AlertTriangle, CheckCircle,
@@ -75,6 +75,7 @@ const DEFAULT_DASHBOARD_DATA = {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState('2026-12');
   const [data, setData] = useState(DEFAULT_DASHBOARD_DATA);
   const [loading, setLoading] = useState(false);
@@ -346,8 +347,15 @@ const Dashboard = () => {
           <div
             className="stat-card"
             style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
-            onClick={() => window.location.href = `/conflicts?month=${selectedMonth}&severity=CRITICAL`}
+            onClick={() => navigate(`/conflicts?month=${selectedMonth}&severity=CRITICAL`)}
             title="Click to view and resolve all critical coverage gaps in Conflict Center"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                navigate(`/conflicts?month=${selectedMonth}&severity=CRITICAL`);
+              }
+            }}
           >
             <div className="d-flex justify-content-between align-items-start">
               <div>
@@ -357,7 +365,10 @@ const Dashboard = () => {
                 <div style={{ fontSize: '1.8rem', fontWeight: 800, color: (stats.critical_conflicts > 0 || stats.unresolved_conflicts > 0) ? '#dc2626' : '#16a34a', lineHeight: 1.2 }}>
                   {stats.unresolved_conflicts !== undefined ? stats.unresolved_conflicts : 10}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600, marginTop: '4px' }}>
+                <div
+                  className="d-inline-flex align-items-center gap-1 text-danger fw-semibold"
+                  style={{ fontSize: '0.75rem', marginTop: '4px', textDecoration: 'underline' }}
+                >
                   {stats.critical_conflicts || 0} Critical Coverage Gaps <span style={{ fontSize: '0.7rem' }}>→</span>
                 </div>
               </div>
