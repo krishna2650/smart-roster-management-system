@@ -221,11 +221,9 @@ The system permits saving the schedule as a `DRAFT` with persistent visual warni
 4. **Caching**: Cache brand operating calendar lookups and holiday tables in Redis during batch execution.
 
 ### Question 8: What would you improve with one additional week?
-1. **Automated Swap Marketplace**: *Implemented in this submission as an enterprise bonus!*
-2. **Fatigue & Fair-Share Guardrails**: *Implemented in this submission as an enterprise bonus!*
-3. **Webhook & Slack/Email Notifications**: Push instant notification alerts when a roster is published or when an approved leave creates an open gap.
-4. **Export to Google Sheets via API**: Two-way synchronization of published rosters into Google Workspace.
-
+1. Constraint optimisation (OR-Tools) for tight cases
+2. An employee self-service dashboard for leave, comp-off and swap requests
+3. Automatic roster regeneration after a leave is approved
 ---
 
 ## 7. RESTful API Reference
