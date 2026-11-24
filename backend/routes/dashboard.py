@@ -170,7 +170,7 @@ def get_stats():
     # 7. Chart: Brand-wise coverage & Staffing structure (~80% single-resource verification)
     brands = list(db[BRANDS_COL].find({"is_active": True}))
     brand_coverage = []
-    assignments = list(db[ASSIGNMENTS_COL].find({"status": "Active"}))
+    assignments = list(db[ASSIGNMENTS_COL].find({"status": "Active", "is_primary": True}))
     single_resource_count = 0
     multi_resource_count = 0
 
