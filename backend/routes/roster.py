@@ -78,7 +78,13 @@ def get_roster_details(r_id):
     if emp_id_filter:
         entries = [e for e in entries if str(e.get("employee_id")) == str(emp_id_filter)]
 
-    conflicts = list(db[CONFLICTS_COL].find({"roster_id": roster["_id"]}))
+    conflicts = list(db[CONFLICTS_COL].find({
+        "$or": [
+            {"roster_id": roster["_id"]},
+            {"roster_id": str(roster["_id"])},
+            {"roster_id": roster.get("roster_id")}
+        ]
+    }))
 
     roster_data = serialize_doc(roster)
     roster_data["entries"] = serialize_doc(entries)

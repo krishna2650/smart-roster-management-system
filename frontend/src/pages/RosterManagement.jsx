@@ -4,7 +4,7 @@ import {
   CalendarRange, Play, RefreshCw, CheckCircle, AlertTriangle,
   Upload, Download, Filter, Eye, Edit2, ShieldAlert, Check, X,
   Building2, Layers, GitBranch, User, Calendar, ArrowLeftRight,
-  ShieldCheck, Zap
+  ShieldCheck, Zap, UserPlus, Sparkles
 } from 'lucide-react';
 import { StatusBadge } from '../components/Common/Badge';
 
@@ -28,6 +28,12 @@ const RosterManagement = () => {
   // Fatigue & Burnout guardrail state
   const [fatigueData, setFatigueData] = useState(null);
   const [showFatigueModal, setShowFatigueModal] = useState(false);
+
+  // Relief Backup Assignment Modal state
+  const [selectedConflict, setSelectedConflict] = useState(null);
+  const [backupCandidates, setBackupCandidates] = useState([]);
+  const [loadingBackups, setLoadingBackups] = useState(false);
+  const [assigningBackup, setAssigningBackup] = useState(false);
 
   // Shift Swap Marketplace state
   const [showSwapModal, setShowSwapModal] = useState(false);
@@ -133,6 +139,7 @@ const RosterManagement = () => {
       setActionLoading(true);
       const res = await api.post(`/rosters/${rosterData.roster_id}/validate`);
       const val = res.data.validation;
+      const monthParam = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
       setFeedback({
         type: val.is_valid ? 'success' : 'warning',
         message: val.is_valid
@@ -140,7 +147,7 @@ const RosterManagement = () => {
           : `Validation Warning: Found ${val.critical_conflicts} critical coverage gap(s). Please review and assign backups before publishing.`,
         action: !val.is_valid ? {
           label: "Resolve Critical Gaps in Conflict Center →",
-          onClick: () => { window.location.href = `/conflicts?month=${selectedMonth}`; }
+          onClick: () => { window.location.href = `/conflicts?month=${monthParam}&severity=CRITICAL`; }
         } : null
       });
       await fetchRoster();
@@ -148,6 +155,42 @@ const RosterManagement = () => {
       setFeedback({ type: 'danger', message: err.message });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleOpenReliefModal = async (conflict) => {
+    setSelectedConflict(conflict);
+    setLoadingBackups(true);
+    try {
+      const res = await api.get(`/conflicts/${conflict._id}/backups`);
+      setBackupCandidates(res.data.backup_candidates || []);
+    } catch (err) {
+      console.error("Failed to fetch backup recommendations:", err);
+    } finally {
+      setLoadingBackups(false);
+    }
+  };
+
+  const handleAssignReliefBackup = async (candidate) => {
+    if (!selectedConflict || !rosterData) return;
+    try {
+      setAssigningBackup(true);
+      await api.post(`/rosters/${rosterData.roster_id}/reassign-backup`, {
+        date: selectedConflict.date,
+        process_id: selectedConflict.process_id,
+        brand_id: selectedConflict.brand_id,
+        employee_id: candidate.employee_id
+      });
+      setFeedback({
+        type: 'success',
+        message: `Successfully assigned ${candidate.employee_name} as relief backup for ${selectedConflict.brand_name}! Roster updated and coverage restored.`
+      });
+      setSelectedConflict(null);
+      await fetchRoster();
+    } catch (err) {
+      alert("Error assigning relief backup: " + (err.response?.data?.error || err.message));
+    } finally {
+      setAssigningBackup(false);
     }
   };
 
@@ -698,15 +741,101 @@ const RosterManagement = () => {
               </div>
             </div>
 
-            {rosterData.coverage_summary?.total_gaps > 0 && (
-              <div className="d-flex align-items-center gap-2 text-danger fw-bold" style={{ fontSize: '0.82rem' }}>
-                <ShieldAlert size={16} />
-                <span>{rosterData.coverage_summary?.total_gaps} Unresolved Coverage Gap(s)</span>
+            {rosterData.coverage_summary?.total_gaps > 0 ? (
+              <div className="d-flex align-items-center gap-2">
+                <span className="text-danger fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.82rem' }}>
+                  <ShieldAlert size={15} /> {rosterData.coverage_summary?.total_gaps} Critical Gap(s)
+                </span>
+                <button
+                  className="btn btn-sm btn-outline-danger py-0 px-2 fw-bold"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={() => {
+                    const monthParam = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+                    window.location.href = `/conflicts?month=${monthParam}&severity=CRITICAL`;
+                  }}
+                  title="Open Conflict Center filtered to this month"
+                >
+                  Resolve in Conflict Center →
+                </button>
+              </div>
+            ) : (
+              <div className="d-flex align-items-center gap-1 text-success fw-bold" style={{ fontSize: '0.82rem' }}>
+                <CheckCircle size={15} /> 100% Process Staffing
               </div>
             )}
           </div>
         </div>
       )}
+
+      {/* Month-Specific Critical Coverage Gaps Panel */}
+      {rosterData && (() => {
+        const criticalGaps = (rosterData.conflicts || []).filter(
+          c => c.severity === 'CRITICAL' && c.resolution_status === 'UNRESOLVED'
+        );
+        if (criticalGaps.length === 0) return null;
+        return (
+          <div className="card border-0 shadow-sm mb-3 border-start border-danger border-4 bg-white">
+            <div className="card-header bg-danger-subtle text-danger-emphasis py-2 px-3 d-flex justify-content-between align-items-center">
+              <div className="d-flex align-items-center gap-2">
+                <ShieldAlert size={18} className="text-danger" />
+                <span className="fw-bold" style={{ fontSize: '0.9rem' }}>
+                  Critical Coverage Gaps for {new Date(selectedYear, selectedMonth - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' })} ({criticalGaps.length} Unresolved Shortfalls)
+                </span>
+              </div>
+              <button
+                className="btn btn-danger btn-sm py-0.5 px-2.5 fw-semibold"
+                style={{ fontSize: '0.78rem' }}
+                onClick={() => {
+                  const monthParam = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+                  window.location.href = `/conflicts?month=${monthParam}&severity=CRITICAL`;
+                }}
+              >
+                Manage in Conflict Center →
+              </button>
+            </div>
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-sm table-hover align-middle mb-0" style={{ fontSize: '0.82rem' }}>
+                  <thead className="table-light">
+                    <tr>
+                      <th style={{ width: '120px' }}>Date</th>
+                      <th>Brand</th>
+                      <th>Mandatory Process</th>
+                      <th>Conflict Reason</th>
+                      <th className="text-end" style={{ width: '160px' }}>Quick Relief</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {criticalGaps.map(gap => (
+                      <tr key={gap._id}>
+                        <td className="fw-bold font-monospace text-dark">{gap.date}</td>
+                        <td>
+                          <span className="badge bg-light text-dark border fw-semibold">
+                            {gap.brand_name || 'Brand'}
+                          </span>
+                        </td>
+                        <td className="fw-semibold text-primary">{gap.process_name || 'Process'}</td>
+                        <td className="text-muted" style={{ maxWidth: '320px' }}>
+                          {gap.description}
+                        </td>
+                        <td className="text-end">
+                          <button
+                            className="btn btn-sm btn-outline-danger py-0.5 px-2 fw-semibold d-inline-flex align-items-center gap-1"
+                            style={{ fontSize: '0.75rem' }}
+                            onClick={() => handleOpenReliefModal(gap)}
+                          >
+                            <UserPlus size={12} /> Assign Backup
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* View Switcher Tabs & Filters */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
@@ -1134,6 +1263,92 @@ const RosterManagement = () => {
 
               <div className="modal-footer border-top bg-light">
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowFatigueModal(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Relief Backup Reassignment Recommendation Modal */}
+      {selectedConflict && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)', zIndex: 1050 }} tabIndex="-1">
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header bg-light border-bottom">
+                <div>
+                  <h5 className="modal-title mb-0" style={{ fontSize: '1.05rem', fontWeight: 700 }}>
+                    Relief Backup Recommendation Engine
+                  </h5>
+                  <span className="text-muted" style={{ fontSize: '0.78rem' }}>
+                    Target: {selectedConflict.brand_name} ({selectedConflict.process_name}) on {selectedConflict.date}
+                  </span>
+                </div>
+                <button type="button" className="btn-close" onClick={() => setSelectedConflict(null)}></button>
+              </div>
+              <div className="modal-body p-3" style={{ fontSize: '0.85rem' }}>
+                <div className="alert alert-warning py-2 mb-3" style={{ fontSize: '0.8rem' }}>
+                  <AlertTriangle size={14} className="me-1" />
+                  <strong>Coverage Shortfall:</strong> {selectedConflict.explanation || selectedConflict.description}
+                </div>
+
+                <h6 className="fw-bold mb-2">
+                  <Sparkles size={16} className="text-primary me-1" />
+                  Eligible Available Candidates (Ranked by Pod & Skill Compatibility):
+                </h6>
+
+                {loadingBackups ? (
+                  <div className="text-center py-4 text-muted">
+                    <div className="spinner-border spinner-border-sm text-primary me-2"></div>
+                    Calculating candidate suitability scores...
+                  </div>
+                ) : backupCandidates.length === 0 ? (
+                  <p className="text-muted py-3">No immediate eligible backups available on this date.</p>
+                ) : (
+                  <div className="list-group">
+                    {backupCandidates.map((cand, idx) => (
+                      <div key={cand.employee_id} className="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <div>
+                          <div className="d-flex align-items-center gap-2">
+                            <span className="badge bg-primary text-white" style={{ fontSize: '0.72rem' }}>
+                              #{idx + 1} Best Match
+                            </span>
+                            <strong style={{ fontSize: '0.95rem' }}>{cand.employee_name}</strong>
+                            <span className="text-muted" style={{ fontSize: '0.75rem' }}>({cand.designation})</span>
+                          </div>
+                          <div className="mt-1 d-flex flex-wrap gap-1">
+                            {cand.reasons.map((r, i) => (
+                              <span key={i} className="badge bg-light text-secondary border" style={{ fontSize: '0.7rem' }}>
+                                {r}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="d-flex align-items-center gap-3">
+                          <div className="text-end">
+                            <div className="text-success fw-bold" style={{ fontSize: '1rem' }}>
+                              {cand.score} pts
+                            </div>
+                            <div className="text-muted" style={{ fontSize: '0.65rem' }}>Suitability Score</div>
+                          </div>
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => handleAssignReliefBackup(cand)}
+                            disabled={assigningBackup}
+                            style={{ backgroundColor: '#2563eb' }}
+                          >
+                            {assigningBackup ? 'Assigning...' : 'Assign Relief'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer bg-light border-top">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSelectedConflict(null)}>
                   Close
                 </button>
               </div>

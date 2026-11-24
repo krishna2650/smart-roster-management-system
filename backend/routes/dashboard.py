@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from bson import ObjectId
 from database import get_db
 from models.schemas import (
@@ -53,16 +53,23 @@ def get_stats():
             for l in leaves_today
         ]
 
-    # 3. Check current month's latest roster or benchmark December roster
-    # Select benchmark roster ROSTER-2026-12 (which contains the active constraint scenarios) or current month
-    roster = db[ROSTERS_COL].find_one({"roster_id": "ROSTER-2026-12"})
+    # 3. Check requested month's roster or benchmark December 2026 roster
+    req_month_str = request.args.get("month", "2026-12")
+    req_year_str = request.args.get("year")
+    if "-" in req_month_str:
+        target_year, target_month = req_month_str.split("-")
+        target_year = int(target_year)
+        target_month = int(target_month)
+    else:
+        target_month = int(req_month_str)
+        target_year = int(req_year_str) if req_year_str else (2026 if target_month in [11, 12] else 2027)
+
+    target_roster_id = f"ROSTER-{target_year}-{target_month:02d}"
+    roster = db[ROSTERS_COL].find_one({"roster_id": target_roster_id})
     if not roster:
-        now = datetime.now()
-        roster_id_str = f"ROSTER-{now.year}-{now.month:02d}"
-        roster = db[ROSTERS_COL].find_one({"roster_id": roster_id_str})
-    
+        # Fallback to benchmark ROSTER-2026-12
+        roster = db[ROSTERS_COL].find_one({"roster_id": "ROSTER-2026-12"})
     if not roster:
-        # Fallback to most recent roster
         rosters = list(db[ROSTERS_COL].find({}).sort([("year", -1), ("month", -1)]))
         roster = rosters[0] if rosters else None
 
@@ -70,18 +77,19 @@ def get_stats():
     all_active_emps = list(db[EMPLOYEES_COL].find({"is_active": True}))
     emp_dict = {str(e["_id"]): e for e in all_active_emps}
 
-    # 4. Conflicts & Coverage Reconciliation
-    unresolved_conflicts = db[CONFLICTS_COL].count_documents({"resolution_status": "UNRESOLVED"})
-    critical_conflicts = db[CONFLICTS_COL].count_documents({"resolution_status": "UNRESOLVED", "severity": "CRITICAL"})
+    # 4. Month-Specific Conflicts & Coverage Reconciliation
+    month_regex = f"^{target_year}-{target_month:02d}-"
+    unresolved_conflicts = db[CONFLICTS_COL].count_documents({"date": {"$regex": month_regex}, "resolution_status": "UNRESOLVED"})
+    critical_conflicts = db[CONFLICTS_COL].count_documents({"date": {"$regex": month_regex}, "resolution_status": "UNRESOLVED", "severity": "CRITICAL"})
 
-    # Mathematical reconciliation: If there are unassigned critical gaps, coverage reflects true covered/required ratio
+    # Mathematical reconciliation for this specific month
     if roster and roster.get("coverage_summary"):
         cov_sum = roster.get("coverage_summary", {})
         total_req = cov_sum.get("total_process_days_required", 1004)
         total_cov = cov_sum.get("total_process_days_covered", 994)
         total_gaps = cov_sum.get("total_gaps", critical_conflicts)
-        if critical_conflicts > 0:
-            coverage_percentage = round((total_cov / max(1, total_req)) * 100, 1) # 99.0%
+        if total_req > 0:
+            coverage_percentage = round((total_cov / total_req) * 100, 1)
         else:
             coverage_percentage = 100.0
     else:

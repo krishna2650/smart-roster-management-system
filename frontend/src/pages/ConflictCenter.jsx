@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import {
   AlertTriangle, ShieldAlert, CheckCircle, ArrowRight, UserPlus,
@@ -6,12 +7,26 @@ import {
 } from 'lucide-react';
 
 const ConflictCenter = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialMonth = searchParams.get('month') || '2026-12';
+  const initialSeverity = searchParams.get('severity') || '';
+  const initialStatus = searchParams.get('status') || 'UNRESOLVED';
+
   const [conflicts, setConflicts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [severityFilter, setSeverityFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('UNRESOLVED');
-  const [monthFilter, setMonthFilter] = useState('');
+  const [severityFilter, setSeverityFilter] = useState(initialSeverity);
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
+  const [monthFilter, setMonthFilter] = useState(initialMonth);
   const [counts, setCounts] = useState({ total: 0, critical: 0, unresolved: 0, resolved: 0 });
+
+  // Sync state to URL search params
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (monthFilter) params.set('month', monthFilter);
+    if (severityFilter) params.set('severity', severityFilter);
+    if (statusFilter) params.set('status', statusFilter);
+    setSearchParams(params, { replace: true });
+  }, [monthFilter, severityFilter, statusFilter, setSearchParams]);
   
   // Backup modal state
   const [selectedConflict, setSelectedConflict] = useState(null);
@@ -223,19 +238,21 @@ const ConflictCenter = () => {
                 value={monthFilter}
                 onChange={e => setMonthFilter(e.target.value)}
               >
-                <option value="">All Months</option>
-                <option value="12">December (10 Conflicts - PureSkin, EcoGlow, Velvet Thread, VoltTech)</option>
-                <option value="1">January (VoltTech, NutriFuel)</option>
-                <option value="2">February (KetoBites, UrbanStyle, VoltTech)</option>
-                <option value="3">March (AudioPulse, VoltTech, Zenith)</option>
-                <option value="4">April (SmartCharge, LuxeHome, VoltTech, Zenith)</option>
-                <option value="5">May (GlowJewel, NutriFuel)</option>
-                <option value="6">June (UrbanStyle, PureSkin, Velvet Thread)</option>
-                <option value="7">July (KetoBites, VoltTech)</option>
-                <option value="8">August (AudioPulse, EcoGlow)</option>
-                <option value="9">September (LuxeHome, SmartCharge, VoltTech)</option>
-                <option value="10">October (GlowJewel, VoltTech, Zenith)</option>
-                <option value="11">November (NutriFuel, UrbanStyle, VoltTech, Zenith)</option>
+                <option value="">All Months (Full Enterprise View)</option>
+                <option value="2026-12">December 2026 (Benchmark • 10 Critical Gaps)</option>
+                <option value="2026-11">November 2026 (8 Gaps)</option>
+                <option value="2027-01">January 2027 (4 Gaps)</option>
+                <option value="2027-02">February 2027 (7 Gaps)</option>
+                <option value="2027-03">March 2027 (5 Gaps)</option>
+                <option value="2027-04">April 2027 (8 Gaps)</option>
+                <option value="2027-05">May 2027 (6 Gaps)</option>
+                <option value="2027-06">June 2027 (9 Gaps)</option>
+                <option value="2027-07">July 2027 (4 Gaps)</option>
+                <option value="2027-08">August 2027 (6 Gaps)</option>
+                <option value="2027-09">September 2027 (7 Gaps)</option>
+                <option value="2027-10">October 2027 (5 Gaps)</option>
+                <option value="2027-11">November 2027 (8 Gaps)</option>
+                <option value="2027-12">December 2027 (10 Gaps)</option>
               </select>
             </div>
             <div className="col-md-4">

@@ -75,6 +75,7 @@ const DEFAULT_DASHBOARD_DATA = {
 };
 
 const Dashboard = () => {
+  const [selectedMonth, setSelectedMonth] = useState('2026-12');
   const [data, setData] = useState(DEFAULT_DASHBOARD_DATA);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -85,10 +86,10 @@ const Dashboard = () => {
   const [lastSyncTime, setLastSyncTime] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  const fetchStats = async (isBackground = false) => {
+  const fetchStats = async (isBackground = false, targetMonth = selectedMonth) => {
     try {
       if (!isBackground && !data) setLoading(true);
-      const res = await api.get('/dashboard/stats');
+      const res = await api.get(`/dashboard/stats?month=${targetMonth}`);
       if (res.data) {
         setData(res.data);
         setLastSyncTime(new Date());
@@ -102,13 +103,13 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchStats();
-    // Live 24/7 background polling: automatically synchronizes every 15 seconds
+    fetchStats(false, selectedMonth);
+    // Live background polling: automatically synchronizes every 15 seconds
     const intervalId = setInterval(() => {
-      fetchStats(true);
+      fetchStats(true, selectedMonth);
     }, 15000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [selectedMonth]);
 
   // Real-time ticking seconds clock: ticks continuously every 1 second (1, 2, 3...)
   useEffect(() => {
@@ -122,8 +123,8 @@ const Dashboard = () => {
     try {
       setRefreshing(true);
       setErrorMsg('');
-      await fetchStats();
-      setSuccessMsg('Live dashboard telemetry refreshed from database.');
+      await fetchStats(false, selectedMonth);
+      setSuccessMsg(`Live dashboard telemetry refreshed for ${selectedMonth}.`);
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
       setErrorMsg('Failed to refresh dashboard: ' + (err.response?.data?.error || err.message));
@@ -198,7 +199,35 @@ const Dashboard = () => {
             Real-time telemetry across 30+ specialists, dedicated brand managers, and 4 operational pods • <span className="fw-semibold text-dark">{currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </p>
         </div>
-        <div className="d-flex gap-2 mt-2 mt-md-0">
+        <div className="d-flex flex-wrap gap-2 align-items-center mt-2 mt-md-0">
+          <div className="d-flex align-items-center gap-1.5 bg-white border rounded px-2 py-1 shadow-xs">
+            <span className="text-muted fw-bold" style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>Month Scope:</span>
+            <select
+              className="form-select form-select-sm border-0 py-0 fw-semibold text-primary"
+              style={{ fontSize: '0.82rem', width: 'auto', cursor: 'pointer', background: 'transparent' }}
+              value={selectedMonth}
+              onChange={(e) => {
+                const newMonth = e.target.value;
+                setSelectedMonth(newMonth);
+              }}
+              title="Select active month for dashboard telemetry, coverage KPI, and conflict tracking"
+            >
+              <option value="2026-12">Dec 2026 (Benchmark • 10 Gaps)</option>
+              <option value="2026-11">Nov 2026 (8 Gaps)</option>
+              <option value="2027-01">Jan 2027 (4 Gaps)</option>
+              <option value="2027-02">Feb 2027 (7 Gaps)</option>
+              <option value="2027-03">Mar 2027 (5 Gaps)</option>
+              <option value="2027-04">Apr 2027 (8 Gaps)</option>
+              <option value="2027-05">May 2027 (6 Gaps)</option>
+              <option value="2027-06">Jun 2027 (9 Gaps)</option>
+              <option value="2027-07">Jul 2027 (4 Gaps)</option>
+              <option value="2027-08">Aug 2027 (6 Gaps)</option>
+              <option value="2027-09">Sep 2027 (7 Gaps)</option>
+              <option value="2027-10">Oct 2027 (5 Gaps)</option>
+              <option value="2027-11">Nov 2027 (8 Gaps)</option>
+              <option value="2027-12">Dec 2027 (10 Gaps)</option>
+            </select>
+          </div>
           <button
             className="btn btn-outline-secondary d-flex align-items-center gap-2"
             onClick={handleRefresh}
@@ -235,7 +264,7 @@ const Dashboard = () => {
             <CheckCircle size={16} className="text-success flex-shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <Link to="/roster" className="btn btn-sm btn-outline-success border-0 py-0 px-2 fw-bold text-decoration-underline" style={{ fontSize: '0.8rem' }}>
+          <Link to={`/roster`} className="btn btn-sm btn-outline-success border-0 py-0 px-2 fw-bold text-decoration-underline" style={{ fontSize: '0.8rem' }}>
             View Full Matrix →
           </Link>
         </div>
@@ -297,13 +326,13 @@ const Dashboard = () => {
             <div className="d-flex justify-content-between align-items-start">
               <div>
                 <div className="text-muted" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
-                  Roster Coverage
+                  Roster Coverage ({selectedMonth})
                 </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: stats.critical_conflicts > 0 ? '#ea580c' : '#16a34a', lineHeight: 1.2 }}>
-                  {stats.critical_conflicts > 0 ? '99.0%' : '100%'}
+                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: (stats.critical_conflicts > 0 || stats.coverage_percentage < 100) ? '#ea580c' : '#16a34a', lineHeight: 1.2 }}>
+                  {stats.coverage_percentage !== undefined ? `${stats.coverage_percentage}%` : '99.0%'}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: stats.critical_conflicts > 0 ? '#ea580c' : '#16a34a', fontWeight: 600, marginTop: '4px' }}>
-                  {stats.critical_conflicts > 0 ? `${stats.shifts_covered || 994}/${stats.shifts_required || 1004} shifts (${stats.critical_conflicts} gaps)` : '1004/1004 shifts covered'}
+                <div style={{ fontSize: '0.75rem', color: (stats.critical_conflicts > 0 || stats.coverage_percentage < 100) ? '#ea580c' : '#16a34a', fontWeight: 600, marginTop: '4px' }}>
+                  {stats.shifts_covered || 994}/{stats.shifts_required || 1004} shifts ({stats.critical_conflicts || 0} gaps)
                 </div>
               </div>
               <div style={{ background: '#ecfdf5', color: '#059669', padding: '10px', borderRadius: '10px' }}>
@@ -317,19 +346,19 @@ const Dashboard = () => {
           <div
             className="stat-card"
             style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
-            onClick={() => window.location.href = '/conflicts'}
+            onClick={() => window.location.href = `/conflicts?month=${selectedMonth}&severity=CRITICAL`}
             title="Click to view and resolve all critical coverage gaps in Conflict Center"
           >
             <div className="d-flex justify-content-between align-items-start">
               <div>
                 <div className="text-muted" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
-                  Unresolved Conflicts
+                  Unresolved Conflicts ({selectedMonth})
                 </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: stats.critical_conflicts > 0 ? '#dc2626' : '#16a34a', lineHeight: 1.2 }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: (stats.critical_conflicts > 0 || stats.unresolved_conflicts > 0) ? '#dc2626' : '#16a34a', lineHeight: 1.2 }}>
                   {stats.unresolved_conflicts !== undefined ? stats.unresolved_conflicts : 10}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600, marginTop: '4px' }}>
-                  {stats.critical_conflicts || 10} Critical Coverage Gaps <span style={{ fontSize: '0.7rem' }}>→</span>
+                  {stats.critical_conflicts || 0} Critical Coverage Gaps <span style={{ fontSize: '0.7rem' }}>→</span>
                 </div>
               </div>
               <div style={{ background: '#fef2f2', color: '#dc2626', padding: '10px', borderRadius: '10px' }}>

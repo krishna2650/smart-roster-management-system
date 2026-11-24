@@ -22,6 +22,12 @@ def get_conflicts():
     month = request.args.get("month")
     year = request.args.get("year")
 
+    # If month is passed as YYYY-MM (e.g. 2026-12), split into year and month
+    if month and "-" in month:
+        parts = month.split("-")
+        year = parts[0]
+        month = parts[1]
+
     query = {}
     if severity:
         query["severity"] = severity.upper()
@@ -38,7 +44,9 @@ def get_conflicts():
     if month and year:
         query["date"] = {"$regex": f"^{year}-{int(month):02d}-"}
     elif month:
-        query["date"] = {"$regex": f"-{int(month):02d}-"}
+        m_int = int(month)
+        inferred_year = 2026 if m_int in [11, 12] else 2027
+        query["date"] = {"$regex": f"^{inferred_year}-{m_int:02d}-"}
 
     conflicts = list(db[CONFLICTS_COL].find(query).sort("date", 1))
 
@@ -56,7 +64,9 @@ def get_conflicts():
     if month and year:
         scope_query["date"] = {"$regex": f"^{year}-{int(month):02d}-"}
     elif month:
-        scope_query["date"] = {"$regex": f"-{int(month):02d}-"}
+        m_int = int(month)
+        inferred_year = 2026 if m_int in [11, 12] else 2027
+        scope_query["date"] = {"$regex": f"^{inferred_year}-{m_int:02d}-"}
     elif roster_id:
         scope_query["roster_id"] = to_object_id(roster_id)
 
