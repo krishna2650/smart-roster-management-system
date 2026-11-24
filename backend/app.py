@@ -89,7 +89,7 @@ def start_render_keep_alive():
     """Background thread that pings /api/health every 9 minutes so Render instance stays awake 24/7."""
     def pinger():
         time.sleep(25)  # Initial wait for server binding
-        ext_url = os.environ.get("RENDER_EXTERNAL_URL") or "https://datastraw-roster-backend.onrender.com"
+        ext_url = os.environ.get("RENDER_EXTERNAL_URL") or "https://smart-roster-management-system-y3zb.onrender.com"
         target = f"{ext_url.rstrip('/')}/api/health"
         print(f"[KeepAlive 24/7] Active worker initialized for: {target}")
         while True:

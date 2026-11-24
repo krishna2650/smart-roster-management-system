@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import api, { getBaseUrl } from '../services/api';
 import {
   FileSpreadsheet, Download, Printer, CheckCircle, AlertTriangle, Building2, BarChart2
 } from 'lucide-react';
@@ -24,7 +24,7 @@ const Reports = () => {
   }, []);
 
   const handleDownloadCsv = (type) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+    const baseUrl = getBaseUrl();
     const url = `${baseUrl}/reports/export-csv?type=${type}&roster_id=${summary?.roster_id || ''}`;
     window.open(url, '_blank');
   };

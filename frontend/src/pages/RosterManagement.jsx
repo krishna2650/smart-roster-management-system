@@ -855,7 +855,7 @@ const RosterManagement = () => {
                         </td>
                         <td className="fw-semibold text-primary">{gap.process_name || 'Process'}</td>
                         <td className="text-muted" style={{ maxWidth: '340px', fontSize: '0.78rem' }}>
-                          {gap.explanation || gap.description || `${gap.conflict_type || 'Coverage shortfall'}: Process required on client calendar but primary specialist is absent`}
+                          {(gap.explanation && gap.explanation.trim()) || (gap.description && gap.description.trim()) || `${gap.conflict_type || 'Coverage shortfall'}: Process required on client calendar but primary specialist is absent`}
                         </td>
                         <td className="text-end">
                           <button

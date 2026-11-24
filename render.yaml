@@ -35,4 +35,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://datastraw-roster-backend.onrender.com/api
+        value: https://smart-roster-management-system-y3zb.onrender.com/api
