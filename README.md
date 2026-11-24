@@ -342,6 +342,30 @@ Use the one-click demo role switcher in the top navigation bar or log in with:
 
 ---
 
+## 11. 3–5 Minute Demo Video Walkthrough Script
 
+Record using **Loom**, **OBS Studio**, or the built-in Windows screen recorder (**`Win + Alt + R`**).
 
+* **Scene 1 (0:00 – 0:45) Executive Telemetry:** Open Dashboard (`/`), highlight 32 Specialists, 12 Brands (83.3% single-resource), 4 Pods, live ticking clock, and 100% accounted headcount (24 working + 4 off + 4 leave).
+* **Scene 2 (0:45 – 1:30) Brand Calendars & Asymmetry:** Open Brands (`/brands`), show EcoGlow (`365_DAYS`), PureSkin (`DAILY_EXCLUDING_HOLIDAYS`), and Velvet Thread (`MON_SAT_EXCLUDING_HOLIDAYS`).
+* **Scene 3 (1:30 – 2:30) Deterministic Roster Engine:** Open Roster (`/roster`), generate monthly roster in $<1$s, toggle between the 5 perspective views (Company, Pod, Brand, Process, Employee), and demonstrate cell-click editing.
+* **Scene 4 (2:30 – 3:30) Change Management & Relief Backup:** Open Change Simulator (`/change-workflow`), simulate emergency leave for Rahul Verma on EcoGlow, observe the CRITICAL gap, and run algorithmic candidate ranking to deploy relief with 1 click.
+* **Scene 5 (3:30 – 4:15) Shift Swap, Fatigue Guardrail & AI Assistant:** Demonstrate the 5-stage swap pre-validation, the $>6$-consecutive-day fatigue guardrail, and ask the floating **AI Assistant** a workforce question.
+
+---
+
+## 12. Submission Approach Note & Deliverables
+
+### Solution Approach Note
+> We solved DataStraw's workforce scheduling challenge by modeling operational relationships as decoupled, first-class entities in MongoDB and developing a deterministic, rule-based constraint satisfaction engine in Python. 
+> 
+> The system addresses the asymmetrical reality of D2C operations: differentiating between **single-resource brands** (83.3% of accounts where a single dedicated specialist manages Customer Support, Abandoned Cart, and NDR as an integrated shift) and **multi-employee brands** with process specialization. The engine rigorously enforces three divergent client operating calendar models (365-day continuous, daily excluding holidays, and Monday–Saturday excluding Sundays/holidays), tracks leave availability to prevent double-booking, and guarantees fair weekly off rotation. 
+> 
+> To safeguard client SLAs, the platform implements pre-publish validation gates (never silently publish an invalid roster), a live Conflict Center with algorithmic candidate relief ranking based on pod affiliation and skill suitability, a fatigue and burnout streak detector ($>6$ consecutive days), and an in-place Change Management engine that resolves unplanned disruptions without rebuilding the entire monthly roster.
+
+### Summary of Submission Links
+1. **Live Application URL:** https://smart-roster-management-system-1-bfo5.onrender.com
+2. **GitHub Repository:** https://github.com/krishna2650/smart-roster-management-system
+3. **Features Factsheet PDF:** [DataStraw_Smart_Roster_System_Features.pdf](DataStraw_Smart_Roster_System_Features.pdf)
+4. **Official Assessment Submission Dossier:** [DataStraw_Smart_Roster_Management_System_Submission.pdf](DataStraw_Smart_Roster_Management_System_Submission.pdf)
 
