@@ -114,11 +114,12 @@ const Navbar = ({ onToggleMobileSidebar }) => {
 
         {/* Conflict Alert Pill */}
         <Link
-          to="/conflicts"
+          to="/conflicts?month=2026-12&severity=CRITICAL"
           className={`badge d-flex align-items-center gap-1 ${
             criticalConflicts > 0 ? 'bg-danger text-white' : 'bg-success text-white'
           }`}
           style={{ textDecoration: 'none', padding: '0.45rem 0.75rem', borderRadius: '6px', fontSize: '0.78rem' }}
+          title={`Active Benchmark: ${criticalConflicts} Critical Mandatory Coverage Gaps in Dec 2026`}
         >
           {criticalConflicts > 0 ? (
             <>

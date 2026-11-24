@@ -238,8 +238,8 @@ const ConflictCenter = () => {
                 value={monthFilter}
                 onChange={e => setMonthFilter(e.target.value)}
               >
-                <option value="">All Months (Full Enterprise View)</option>
                 <option value="2026-12">December 2026 (Benchmark • 10 Critical Gaps)</option>
+                <option value="all">All Months (Full Enterprise View • 95 Critical Gaps)</option>
                 <option value="2026-11">November 2026 (8 Gaps)</option>
                 <option value="2027-01">January 2027 (4 Gaps)</option>
                 <option value="2027-02">February 2027 (7 Gaps)</option>

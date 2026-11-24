@@ -123,6 +123,7 @@ const RosterManagement = () => {
         message: `Roster generated deterministically! Coverage: ${res.data.result?.coverage_summary?.coverage_percentage}% (${res.data.result?.conflicts_count} conflicts detected).`
       });
       await fetchRoster();
+      window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       setFeedback({
         type: 'danger',
@@ -151,6 +152,7 @@ const RosterManagement = () => {
         } : null
       });
       await fetchRoster();
+      window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       setFeedback({ type: 'danger', message: err.message });
     } finally {
@@ -187,6 +189,7 @@ const RosterManagement = () => {
       });
       setSelectedConflict(null);
       await fetchRoster();
+      window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       alert("Error assigning relief backup: " + (err.response?.data?.error || err.message));
     } finally {
@@ -204,6 +207,7 @@ const RosterManagement = () => {
         message: "Roster published successfully! Notifications and shift locks activated."
       });
       await fetchRoster();
+      window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       setFeedback({
         type: 'danger',
@@ -260,6 +264,7 @@ const RosterManagement = () => {
         message: res.data.message || "Shift swap executed atomically and roster revalidated!"
       });
       await fetchRoster();
+      window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       setFeedback({ type: 'danger', message: "Execution error: " + (err.response?.data?.error || err.message) });
     } finally {
@@ -296,6 +301,7 @@ const RosterManagement = () => {
       });
       setEditingCell(null);
       await fetchRoster();
+      window.dispatchEvent(new Event('conflicts-updated'));
     } catch (err) {
       alert("Error updating cell: " + (err.response?.data?.error || err.message));
     }

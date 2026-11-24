@@ -22,6 +22,13 @@ def get_conflicts():
     month = request.args.get("month")
     year = request.args.get("year")
 
+    # If no month filter requested at all, default to benchmark 2026-12 (reducing default critical gaps from 95 to 10)
+    # If explicitly "all", do not filter by month
+    if month is None:
+        month = "2026-12"
+    elif month.lower() == "all" or month == "":
+        month = None
+
     # If month is passed as YYYY-MM (e.g. 2026-12), split into year and month
     if month and "-" in month:
         parts = month.split("-")

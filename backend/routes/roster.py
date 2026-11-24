@@ -78,11 +78,14 @@ def get_roster_details(r_id):
     if emp_id_filter:
         entries = [e for e in entries if str(e.get("employee_id")) == str(emp_id_filter)]
 
+    req_year = roster.get("year", 2026)
+    req_month = roster.get("month", 12)
     conflicts = list(db[CONFLICTS_COL].find({
         "$or": [
             {"roster_id": roster["_id"]},
             {"roster_id": str(roster["_id"])},
-            {"roster_id": roster.get("roster_id")}
+            {"roster_id": roster.get("roster_id")},
+            {"date": {"$regex": f"^{req_year}-{int(req_month):02d}-"}}
         ]
     }))
 

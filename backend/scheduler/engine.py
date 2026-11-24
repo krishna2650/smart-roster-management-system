@@ -576,9 +576,17 @@ class RosterEngine:
             saved_id = insert_res.inserted_id
 
         # Update conflicts collection
-        self.db[CONFLICTS_COL].delete_many({"roster_id": saved_id})
+        self.db[CONFLICTS_COL].delete_many({
+            "$or": [
+                {"roster_id": saved_id},
+                {"roster_id": str(saved_id)},
+                {"roster_id": roster_id_str},
+                {"date": {"$regex": f"^{year}-{month:02d}-"}}
+            ]
+        })
         for c in conflicts:
             c["roster_id"] = saved_id
+            c["roster_code"] = roster_id_str
             c["created_at"] = datetime.now()
         if conflicts:
             self.db[CONFLICTS_COL].insert_many(conflicts)
